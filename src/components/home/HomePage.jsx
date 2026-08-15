@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { Sparkles, ArrowRight, BookOpen, Layers, Target, Users, Heart, Award, Compass, Shield, Zap, Smile } from 'lucide-react'
 import { teamMembers } from '../../data/teamData'
 import { resourcesData } from '../../data/resourcesData'
+import { getAssetUrl } from '../../utils/assetUrl'
 
 // ── Shared Core Values Constellation Data ────────────────────
 const constellationValues = [
@@ -198,7 +199,7 @@ export default function HomePage({ showMode }) {
       <section className="relative min-h-[80vh] flex flex-col items-center justify-center pt-8 pb-12 px-4 overflow-hidden rounded-b-[3rem] shadow-2xl">
         {/* Dark warm hero background */}
         <div className="home-hero-bg">
-          <img src="/hero-home.png" alt="" onError={(e) => (e.target.style.display = 'none')} />
+          <img src={getAssetUrl('hero-home.png')} alt="" onError={(e) => (e.target.style.display = 'none')} />
         </div>
 
         {/* Ambient floating doodles & math symbols */}

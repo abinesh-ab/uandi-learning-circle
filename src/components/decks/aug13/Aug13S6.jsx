@@ -1,3 +1,5 @@
+import { getAssetUrl } from '../../../utils/assetUrl'
+
 export default function Aug13S6() {
   const criteria = [
     { emoji: '💡', label: 'Innovation', desc: 'Creative methods & ideas', border: 'border-t-violet-500' },
@@ -28,7 +30,7 @@ export default function Aug13S6() {
 
       <div className="glass-card p-4 rounded-3xl border border-amber-200 bg-amber-50/30 relative overflow-hidden">
         <img
-          src="/leaderboard-aug13.jpeg"
+          src={getAssetUrl('leaderboard-aug13.jpeg')}
           alt="X Factors Leaderboard"
           className="w-full max-h-80 object-contain rounded-2xl"
           onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex' }}

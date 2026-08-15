@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { getAssetUrl } from '../../../utils/assetUrl'
 
 const nameProposals = [
   { id: 1, name: 'LC 0', desc: 'Every great journey starts at Zero—the point of breakthrough.', border: 'border-l-blue-500' },
@@ -33,7 +34,7 @@ export default function July30S3() {
         <div className="relative max-w-3xl mx-auto glass-card p-4 rounded-3xl border-2 border-blue-300/50 shadow-xl overflow-hidden group">
           <div className="w-full h-64 md:h-80 bg-gradient-to-b from-blue-50/50 to-amber-50/50 rounded-2xl flex items-center justify-center overflow-hidden">
             <img
-              src="/The-X-Factors.jpeg"
+              src={getAssetUrl('The-X-Factors.jpeg')}
               alt="Coimbatore Squad Team"
               className="h-full w-auto object-contain drop-shadow-xl group-hover:scale-105 transition-all duration-500"
               onError={(e) => { e.target.style.display = 'none' }}
@@ -73,7 +74,7 @@ export default function July30S3() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
           <div className="relative rounded-2xl overflow-hidden border border-slate-200 shadow-md group h-48 md:h-56 bg-amber-50/50">
             <img
-              src="/social-contract.png"
+              src={getAssetUrl('social-contract.png')}
               alt="Social Contract Handcrafted"
               className="w-full h-full object-cover group-hover:scale-105 transition-all duration-500"
               onError={(e) => { e.target.style.display = 'none' }}

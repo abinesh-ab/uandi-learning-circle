@@ -1,3 +1,5 @@
+import { getAssetUrl } from '../../../utils/assetUrl'
+
 const expected = [
   { emoji: '✨', text: 'Show up every Saturday, consistently and on time' },
   { emoji: '📋', text: 'Come prepared with a class plan — even a simple one' },
@@ -66,7 +68,7 @@ export default function Aug6S1() {
           <div className="relative w-full rounded-2xl overflow-hidden border-2 border-amber-300 shadow-xl glass-card p-1.5 group">
             <div className="rounded-xl overflow-hidden bg-amber-50" style={{ height: '300px' }}>
               <img
-                src="/social-contract-aug6.jpeg"
+                src={getAssetUrl('social-contract-aug6.jpeg')}
                 alt="The X Factors Social Contract Signing — August 6th, 2026"
                 className="w-full h-full object-cover object-top group-hover:scale-105 transition-all duration-500"
                 onError={(e) => {

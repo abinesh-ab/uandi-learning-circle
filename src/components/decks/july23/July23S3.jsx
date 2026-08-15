@@ -1,3 +1,5 @@
+import { getAssetUrl } from '../../../utils/assetUrl'
+
 export default function July23S3() {
   const universes = [
     { cls: 'text-brand-blue border-blue-200', label: '🦸 Marvel' },
@@ -12,7 +14,7 @@ export default function July23S3() {
     <div className="max-w-5xl w-full text-center space-y-6">
       <div className="relative max-w-2xl mx-auto rounded-3xl overflow-hidden glass-card border border-slate-200 p-2 shadow-xl">
         <img
-          src="/FN-Tuitions.jpeg"
+          src={getAssetUrl('FN-Tuitions.jpeg')}
           alt="Learning Circle Community Photo"
           className="w-full h-64 md:h-80 object-cover object-center rounded-2xl shadow-inner"
           onError={(e) => { e.target.style.display = 'none' }}

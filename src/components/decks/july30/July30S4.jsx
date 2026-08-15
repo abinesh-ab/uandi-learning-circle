@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { getAssetUrl } from '../../../utils/assetUrl'
 
 const scenes = [
   { id: 1, label: 'DAY 1', emoji: '🌱', bgClass: 'bg-emerald-50 border-emerald-300', textClass: 'text-emerald-700', title: '"A seed is planted into rich soil."', desc: 'Warm morning sunlight. A tiny watering can beside it. Peaceful beginnings.' },
@@ -59,7 +60,7 @@ export default function July30S4() {
         ) : current.isImage ? (
           <div className="flex flex-col items-center text-center space-y-4 max-w-2xl w-full">
             <span className="text-xs font-mono font-bold text-emerald-700 uppercase tracking-widest">{current.label}</span>
-            <img src="/bamboo-roots.png" alt="Underground Roots Matrix" className="w-full h-56 object-cover rounded-2xl border border-slate-200 shadow-md" onError={(e) => { e.target.style.display = 'none' }} />
+            <img src={getAssetUrl('bamboo-roots.png')} alt="Underground Roots Matrix" className="w-full h-56 object-cover rounded-2xl border border-slate-200 shadow-md" onError={(e) => { e.target.style.display = 'none' }} />
             <p className="text-xs text-slate-600 italic">{current.desc}</p>
           </div>
         ) : (

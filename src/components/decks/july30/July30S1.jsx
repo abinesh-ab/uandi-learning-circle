@@ -1,5 +1,6 @@
 import { Sparkles } from 'lucide-react'
 import confetti from 'canvas-confetti'
+import { getAssetUrl } from '../../../utils/assetUrl'
 
 const heroCategories = [
   { emoji: '🏆', title: 'Proud Moment', desc: 'A personal or kid victory this week.', border: 'border-l-amber-500' },
@@ -25,7 +26,7 @@ export default function July30S1() {
       <div className="max-w-xs md:max-w-sm mx-auto relative rounded-3xl overflow-hidden border-2 border-amber-300 shadow-xl glass-card p-2 group">
         <div className="w-full h-72 md:h-80 rounded-2xl overflow-hidden bg-slate-950 flex items-center justify-center">
           <img
-            src="/cover1.jpg"
+            src={getAssetUrl('cover1.jpg')}
             alt="Hero Moment"
             className="w-full h-full object-cover object-top group-hover:scale-105 transition-all duration-500"
             onError={(e) => { e.target.style.display = 'none' }}
