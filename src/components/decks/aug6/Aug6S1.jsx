@@ -22,7 +22,8 @@ const promised = [
   { emoji: '⏰', text: 'Always be on time, be informed' },
   { emoji: '🔥', text: 'Bring your best to the LC' },
   { emoji: '🤝', text: 'Communication and Involvement to the class planning and in all lc activities' },
-  { emoji: '🗣️', text: 'Give honest feedback (brutally honest) and Ask support whenever needed' },
+  { emoji: '🗣️', text: 'Give honest feedback (brutally honest) about LC },
+  { emoji: '🙋', text: 'Ask support whenever needed' },
 ]
 
 export default function Aug6S1() {
