@@ -151,7 +151,7 @@ export const resourcesData = [
   // ── 🔢 FOUNDATIONAL NUMERACY ────────────────────────────────────
   {
     id: 'fn-1',
-    title: 'U&I Foundational Numeracy Activity Worksheets',
+    title: 'U&I Foundational Numeracy Books',
     subject: 'Numeracy',
     classLevel: 'Primary',
     category: 'foundational_numeracy',

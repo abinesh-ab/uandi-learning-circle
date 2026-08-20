@@ -349,7 +349,7 @@ export default function HomePage({ showMode }) {
             "We believe every child deserves the confidence, curiosity and support to discover their wings — and the freedom to fly towards their dreams."
           </h2>
           <p className="text-xs text-slate-500 max-w-md mx-auto italic">
-            Building roots of learning every Saturday morning, so our kids can soar.
+            Building roots of learning every Saturday evening, so our kids can soar.
           </p>
         </div>
       </section>
@@ -456,7 +456,7 @@ export default function HomePage({ showMode }) {
           </div>
           <h2 className="text-3xl sm:text-4xl font-black text-slate-900 font-heading">MEET THE X FACTORS</h2>
           <p className="text-xs sm:text-sm text-slate-500">
-            8 equal Changemakers dedicated to educating, empowering, and walking alongside our children.
+            Changemakers dedicated to educating, empowering, and walking alongside our children.
           </p>
         </div>
 
