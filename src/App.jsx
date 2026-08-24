@@ -10,7 +10,7 @@ import { useFullscreen } from './hooks/useFullscreen'
 
 export default function App() {
   const [activeMode, setActiveMode] = useState('home') // 'home' | 'decks' | 'activities' | 'resources'
-  const [activeDeck, setActiveDeck] = useState('deck-aug13')
+  const [activeDeck, setActiveDeck] = useState('deck-aug20')
   const [currentSlide, setCurrentSlide] = useState(1)
   const [aug13LockedSlides, setAug13LockedSlides] = useState(new Set([4]))
   const [aug13RSVP, setAug13RSVP] = useState(null)
