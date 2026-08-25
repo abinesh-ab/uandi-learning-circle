@@ -9,6 +9,8 @@ export default function TopNavbar({ activeMode, showMode, activeDeck, switchDeck
     { id: 'decks', label: 'LC Call Decks', emoji: '📚' },
     { id: 'activities', label: 'Activities', emoji: '🎯' },
     { id: 'resources', label: 'Resources', emoji: '📖' },
+    { id: 'gratitude', label: 'Gratitude', emoji: '💖' },
+    { id: 'missions', label: 'Missions', emoji: '📋' },
   ]
 
   return (
@@ -28,7 +30,7 @@ export default function TopNavbar({ activeMode, showMode, activeDeck, switchDeck
       </button>
 
       {/* Global Nav */}
-      <nav className="flex items-center gap-1 bg-slate-100/90 border border-slate-200/80 px-1.5 py-1 rounded-full shadow-inner">
+      <nav className="flex items-center gap-1 bg-slate-100/90 border border-slate-200/80 px-1.5 py-1 rounded-full shadow-inner overflow-x-auto max-w-[60vw] sm:max-w-none scrollbar-none">
         {navItems.map(({ id, label, emoji }) => (
           <button
             key={id}
@@ -43,7 +45,7 @@ export default function TopNavbar({ activeMode, showMode, activeDeck, switchDeck
 
       {/* Deck Selector */}
       {activeMode === 'decks' ? (
-        <div className="flex items-center gap-2 bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-2xl text-xs shadow-sm">
+        <div className="flex items-center gap-2 bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-2xl text-xs shadow-sm shrink-0">
           <Layers className="w-4 h-4 text-brand-blue" />
           <select
             value={activeDeck}
@@ -58,7 +60,7 @@ export default function TopNavbar({ activeMode, showMode, activeDeck, switchDeck
           </select>
         </div>
       ) : (
-        <div className="w-20 hidden md:block" /> // Spacer for balanced header centering
+        <div className="w-16 hidden md:block" /> // Spacer for balanced header centering
       )}
     </header>
   )

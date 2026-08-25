@@ -270,7 +270,7 @@ export default function HomePage({ showMode }) {
           2. QUICK ACCESS CARDS
          ──────────────────────────────────────────────────────── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           <div
             onClick={() => showMode('decks')}
             className="glass-card-interactive p-6 rounded-3xl border border-blue-200 bg-gradient-to-br from-blue-50/80 to-white cursor-pointer group space-y-3"
@@ -284,6 +284,38 @@ export default function HomePage({ showMode }) {
             </p>
             <div className="pt-2 text-xs font-black text-brand-blue flex items-center gap-1 group-hover:translate-x-1 transition-transform">
               <span>Open Decks</span> →
+            </div>
+          </div>
+
+          <div
+            onClick={() => showMode('gratitude')}
+            className="glass-card-interactive p-6 rounded-3xl border border-rose-200 bg-gradient-to-br from-rose-50/80 to-white cursor-pointer group space-y-3"
+          >
+            <div className="w-12 h-12 rounded-2xl bg-rose-500 text-white flex items-center justify-center text-2xl shadow-lg shadow-rose-500/25 group-hover:scale-110 transition-transform">
+              💖
+            </div>
+            <h3 className="text-xl font-bold text-slate-900 font-heading">Gratitude Vault</h3>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Peer-affirmation kudos wall. Leave warm notes &amp; appreciations for teammates.
+            </p>
+            <div className="pt-2 text-xs font-black text-rose-600 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+              <span>Open Gratitude Vault</span> →
+            </div>
+          </div>
+
+          <div
+            onClick={() => showMode('missions')}
+            className="glass-card-interactive p-6 rounded-3xl border border-indigo-200 bg-gradient-to-br from-indigo-50/80 to-white cursor-pointer group space-y-3"
+          >
+            <div className="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-2xl shadow-lg shadow-indigo-600/25 group-hover:scale-110 transition-transform">
+              📋
+            </div>
+            <h3 className="text-xl font-bold text-slate-900 font-heading">Squad Missions</h3>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Row-based volunteer action tracker. Single-click task completion &amp; broadcast tasks.
+            </p>
+            <div className="pt-2 text-xs font-black text-indigo-600 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+              <span>View Squad Missions</span> →
             </div>
           </div>
 

@@ -4,12 +4,14 @@ import BottomNavControls from './components/layout/BottomNavControls'
 import HomePage from './components/home/HomePage'
 import ActivitiesPage from './components/activities/ActivitiesPage'
 import ResourcesPage from './components/resources/ResourcesPage'
+import GratitudeVaultPage from './components/gratitude/GratitudeVaultPage'
+import SquadMissionsPage from './components/missions/SquadMissionsPage'
 import DecksMode from './components/decks/DecksMode'
 import { deckConfig } from './data/data'
 import { useFullscreen } from './hooks/useFullscreen'
 
 export default function App() {
-  const [activeMode, setActiveMode] = useState('home') // 'home' | 'decks' | 'activities' | 'resources'
+  const [activeMode, setActiveMode] = useState('home') // 'home' | 'decks' | 'activities' | 'resources' | 'gratitude' | 'missions'
   const [activeDeck, setActiveDeck] = useState('deck-aug20')
   const [currentSlide, setCurrentSlide] = useState(1)
   const [aug13LockedSlides, setAug13LockedSlides] = useState(new Set([4]))
@@ -116,7 +118,7 @@ export default function App() {
           currentSlide={currentSlide}
           aug13LockedSlides={aug13LockedSlides}
           aug13RSVP={aug13RSVP}
-          handleAug13RSVP={handleAug13RSVP}
+          handleRSVP={handleAug13RSVP}
           navigate={navigate}
         />
       </div>
@@ -129,6 +131,16 @@ export default function App() {
       {/* Mode: Resources */}
       <div className={`mode-panel${activeMode === 'resources' ? ' active' : ''}`}>
         <ResourcesPage />
+      </div>
+
+      {/* Mode: Gratitude Vault */}
+      <div className={`mode-panel${activeMode === 'gratitude' ? ' active' : ''}`}>
+        <GratitudeVaultPage showMode={showMode} />
+      </div>
+
+      {/* Mode: Squad Missions */}
+      <div className={`mode-panel${activeMode === 'missions' ? ' active' : ''}`}>
+        <SquadMissionsPage />
       </div>
 
       {/* Bottom Nav Controls (only in Decks mode) */}
