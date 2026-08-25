@@ -360,7 +360,7 @@ export default function HomePage({ showMode }) {
             </div>
             <h3 className="text-xl font-bold text-slate-900 font-heading">Team</h3>
             <p className="text-xs text-slate-600 leading-relaxed">
-              Meet the 8 Changemakers behind The X Factors.
+              Meet the 10 Changemakers behind The X Factors.
             </p>
             <div className="pt-2 text-xs font-black text-amber-600 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
               <span>Meet Changemakers</span> →

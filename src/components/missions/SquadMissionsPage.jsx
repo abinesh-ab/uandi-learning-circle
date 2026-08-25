@@ -503,7 +503,7 @@ export default function SquadMissionsPage() {
                       onChange={() => setIsBroadcast(true)}
                       className="w-4 h-4 text-brand-blue"
                     />
-                    <span>Broadcast to ALL 8 Volunteers (Passcode "X" Required)</span>
+                    <span>Broadcast to ALL {teamMembers.length} Volunteers (Passcode "X" Required)</span>
                   </label>
 
                   <label className="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-slate-800">
@@ -559,7 +559,7 @@ export default function SquadMissionsPage() {
                   className="w-full py-4 bg-brand-blue hover:bg-blue-700 text-white font-black text-sm rounded-2xl shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2 hover:scale-[1.02] transition-all"
                 >
                   <Plus className="w-4 h-4" />
-                  <span>{isBroadcast ? 'Broadcast Mission to All 8 Rows 🚀' : 'Assign Mission'}</span>
+                  <span>{isBroadcast ? `Broadcast Mission to All ${teamMembers.length} Rows 🚀` : 'Assign Mission'}</span>
                 </button>
               </div>
             </form>
