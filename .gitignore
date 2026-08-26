@@ -30,4 +30,5 @@ dist-ssr/
 # AntiGravity temporary portable downloads
 node-portable/
 git-portable/
+scratch/
 *.zip

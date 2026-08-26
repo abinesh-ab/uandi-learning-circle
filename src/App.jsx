@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { Lock } from 'lucide-react'
 import TopNavbar from './components/layout/TopNavbar'
 import BottomNavControls from './components/layout/BottomNavControls'
 import HomePage from './components/home/HomePage'
@@ -12,11 +13,19 @@ import { useFullscreen } from './hooks/useFullscreen'
 
 export default function App() {
   const [activeMode, setActiveMode] = useState('home') // 'home' | 'decks' | 'activities' | 'resources' | 'gratitude' | 'missions'
-  const [activeDeck, setActiveDeck] = useState('deck-aug20')
+  const [activeDeck, setActiveDeck] = useState('deck-aug20') // Open deck default
   const [currentSlide, setCurrentSlide] = useState(1)
   const [aug13LockedSlides, setAug13LockedSlides] = useState(new Set([4]))
   const [aug13RSVP, setAug13RSVP] = useState(null)
   const { isFullscreen, toggle: toggleFullscreen } = useFullscreen()
+
+  // Passcode gates
+  const [spinJamUnlocked, setSpinJamUnlocked] = useState(false)
+  const [aug27Unlocked, setAug27Unlocked] = useState(false)
+  const [passcodeTarget, setPasscodeTarget] = useState(null) // 'spinjam' | 'aug27' | null
+  const [passcodeInput, setPasscodeInput] = useState('')
+  const [passcodeError, setPasscodeError] = useState(false)
+  const passcodeRef = useRef(null)
 
   const totalSlides = deckConfig[activeDeck]?.slides ?? 1
 
@@ -45,16 +54,55 @@ export default function App() {
   )
 
   // ── Switch deck ─────────────────────────────────────────
-  const switchDeck = useCallback((deckId) => {
-    setActiveDeck(deckId)
-    setCurrentSlide(1)
-  }, [])
+  const switchDeck = useCallback(
+    (deckId) => {
+      if (deckId === 'deck-aug27' && !aug27Unlocked) {
+        setPasscodeTarget('aug27')
+        setPasscodeInput('')
+        setPasscodeError(false)
+        return
+      }
+      setActiveDeck(deckId)
+      setCurrentSlide(1)
+    },
+    [aug27Unlocked]
+  )
 
-  // ── Switch mode ─────────────────────────────────────────
+  // ── Switch mode (unlocked for all modes) ─────────────────
   const showMode = useCallback((mode) => {
     setActiveMode(mode)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [])
+
+  // ── Trigger Spin & Jam unlock ─────────────────────────────
+  const requestUnlockSpinJam = useCallback(() => {
+    setPasscodeTarget('spinjam')
+    setPasscodeInput('')
+    setPasscodeError(false)
+  }, [])
+
+  // ── Passcode submit handler ──────────────────────────────
+  const submitPasscode = useCallback(() => {
+    const input = passcodeInput.trim().toLowerCase()
+    if (passcodeTarget === 'spinjam' && input === 'x') {
+      setSpinJamUnlocked(true)
+      setPasscodeTarget(null)
+      setPasscodeError(false)
+      setPasscodeInput('')
+    } else if (passcodeTarget === 'aug27' && input === 'x') {
+      setAug27Unlocked(true)
+      setPasscodeTarget(null)
+      setPasscodeError(false)
+      setPasscodeInput('')
+      setActiveDeck('deck-aug27')
+      setCurrentSlide(1)
+      setActiveMode('decks')
+    } else {
+      setPasscodeError(true)
+      setPasscodeInput('')
+      if (passcodeRef.current) passcodeRef.current.focus()
+    }
+  }, [passcodeInput, passcodeTarget])
 
   // ── RSVP handler (Aug 13) ────────────────────────────────
   const handleAug13RSVP = useCallback(
@@ -125,7 +173,10 @@ export default function App() {
 
       {/* Mode: Activities */}
       <div className={`mode-panel${activeMode === 'activities' ? ' active' : ''}`}>
-        <ActivitiesPage />
+        <ActivitiesPage
+          spinJamUnlocked={spinJamUnlocked}
+          onRequestUnlockSpinJam={requestUnlockSpinJam}
+        />
       </div>
 
       {/* Mode: Resources */}
@@ -152,6 +203,58 @@ export default function App() {
           toggleFullscreen={toggleFullscreen}
           isFullscreen={isFullscreen}
         />
+      )}
+
+      {/* Passcode Gate Modal (Spin & Jam / Aug 27 Deck) */}
+      {passcodeTarget && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl p-8 max-w-sm w-full space-y-5 text-center">
+            <div className="w-14 h-14 rounded-full bg-amber-100 flex items-center justify-center mx-auto">
+              <Lock className="w-7 h-7 text-amber-600" />
+            </div>
+            <div className="space-y-1">
+              <h2 className="text-xl font-black text-slate-900 font-heading">
+                {passcodeTarget === 'aug27' ? 'LC Call — August 27' : 'Spin & Jam'}
+              </h2>
+              <p className="text-xs text-slate-500">Enter the passcode to continue.</p>
+            </div>
+            <input
+              ref={passcodeRef}
+              type="password"
+              value={passcodeInput}
+              onChange={(e) => {
+                setPasscodeInput(e.target.value)
+                setPasscodeError(false)
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') submitPasscode()
+              }}
+              autoFocus
+              className={`w-full px-4 py-3 rounded-2xl border text-sm font-bold text-center text-slate-900 focus:outline-none transition-colors ${
+                passcodeError
+                  ? 'border-rose-400 bg-rose-50 animate-shake'
+                  : 'border-slate-300 bg-slate-50 focus:border-amber-500'
+              }`}
+            />
+            {passcodeError && (
+              <p className="text-xs text-rose-600 font-bold -mt-2">Incorrect passcode. Try again.</p>
+            )}
+            <div className="flex gap-3">
+              <button
+                onClick={() => setPasscodeTarget(null)}
+                className="flex-1 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitPasscode}
+                className="flex-1 py-3 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold shadow-lg shadow-amber-500/25 transition-all hover:scale-[1.02]"
+              >
+                Unlock
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

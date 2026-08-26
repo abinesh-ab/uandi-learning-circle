@@ -180,43 +180,84 @@ export default function HomePage({ showMode }) {
       {/* ────────────────────────────────────────────────────────
           1. HERO BANNER
          ──────────────────────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="glass-card p-8 sm:p-14 rounded-[2.5rem] border border-blue-200/80 bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white text-center space-y-6 shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-brand-blue/20 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-96 h-96 bg-amber-500/20 rounded-full blur-3xl pointer-events-none" />
+      <section className="w-full max-w-7xl mx-auto px-4 sm:px-6">
+        <div
+          className="p-8 sm:p-14 rounded-[2.5rem] border border-slate-700/50 text-white text-center shadow-2xl relative overflow-hidden flex flex-col items-center justify-start min-h-[480px] sm:min-h-[540px]"
+          style={{
+            backgroundImage: `url(${getAssetUrl('hero-home.png')})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center 35%',
+          }}
+        >
+          {/* Soft top-to-bottom vignette gradient so top text is crystal clear while team photo below is 100% bright & visible */}
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/85 via-slate-950/40 to-slate-950/80 pointer-events-none rounded-[2.5rem]" />
 
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-amber-300 text-xs font-bold uppercase tracking-wider">
-            <Sparkles className="w-4 h-4 text-amber-400" /> MSS FN &amp; TUITIONS • LEARNING CIRCLE
+          {/* Ambient Glows */}
+          <div className="absolute top-0 right-0 w-96 h-96 bg-brand-blue/20 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
+
+          {/* Floating Math Doodles & Emojis */}
+          <div className="absolute top-6 left-8 text-3xl opacity-70 pointer-events-none select-none">
+            📚
+          </div>
+          <div className="absolute top-16 left-12 text-2xl font-serif text-slate-200/50 pointer-events-none select-none font-bold">
+            √x
+          </div>
+          <div className="absolute top-36 left-16 text-xl font-mono text-slate-200/40 pointer-events-none select-none">
+            %
+          </div>
+          <div className="absolute top-10 left-1/4 text-3xl opacity-50 pointer-events-none select-none">
+            💡
+          </div>
+          <div className="absolute top-8 left-1/3 text-xl text-slate-200/40 pointer-events-none select-none">
+            ☆
+          </div>
+          <div className="absolute top-12 left-1/2 text-base text-slate-200/40 pointer-events-none select-none">
+            ◯
+          </div>
+          <div className="absolute top-10 right-1/4 text-3xl opacity-50 pointer-events-none select-none">
+            📖
+          </div>
+          <div className="absolute top-14 right-1/3 text-xl text-slate-200/40 pointer-events-none select-none">
+            ☆
+          </div>
+          <div className="absolute top-16 right-12 text-2xl font-serif text-slate-200/50 pointer-events-none select-none font-bold">
+            x²
+          </div>
+          <div className="absolute top-36 right-16 text-lg font-serif text-slate-200/40 pointer-events-none select-none">
+            Σ = n(n+1)/2
+          </div>
+          <div className="absolute bottom-16 right-10 text-2xl opacity-80 pointer-events-none select-none">
+            ⭐
+          </div>
+          <div className="absolute bottom-16 left-10 text-xl opacity-70 pointer-events-none select-none">
+            🌱
           </div>
 
-          {/* Title */}
-          <h1 className="text-4xl sm:text-6xl font-black font-heading tracking-tight max-w-4xl mx-auto leading-tight">
-            THE X FACTORS <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-rose-300 to-sky-300">
-              UNLOCK THE UNKNOWN
-            </span>
-          </h1>
+          {/* Clean Top Title & Subtitle Block */}
+          <div className="relative z-10 max-w-3xl w-full space-y-4 pt-2 animate-fade-in flex flex-col items-center">
+            {/* Title Header */}
+            <div className="space-y-1 text-center">
+              <h1 className="text-4xl sm:text-6xl md:text-7xl font-black font-heading tracking-wide text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)] uppercase">
+                THE X FACTORS
+              </h1>
+              <p className="text-amber-400 font-extrabold uppercase tracking-widest text-xs sm:text-sm md:text-base drop-shadow-[0_2px_6px_rgba(0,0,0,0.8)]">
+                UNLOCK THE UNKNOWN
+              </p>
+            </div>
 
-          {/* Subtitle */}
-          <p className="text-base sm:text-xl text-white/80 font-medium max-w-2xl mx-auto leading-relaxed">
-            Different minds. One mission. Bigger possibilities. Welcome to the digital home of our volunteer tribe.
-          </p>
+            {/* Subtitle */}
+            <p className="text-xs sm:text-sm md:text-base text-slate-100 font-semibold max-w-xl mx-auto leading-relaxed drop-shadow-[0_2px_6px_rgba(0,0,0,0.8)]">
+              Different minds. One mission. Bigger possibilities.
+            </p>
 
-          {/* Action CTAs */}
-          <div className="flex flex-wrap gap-4 justify-center pt-4">
-            <button
-              onClick={() => showMode('decks')}
-              className="px-8 py-4 bg-brand-blue hover:bg-blue-700 text-white font-black rounded-2xl shadow-xl shadow-blue-600/30 hover:scale-105 transition-all text-sm flex items-center gap-2"
-            >
-              <Layers className="w-4 h-4" /> View LC Decks
-            </button>
-            <button
-              onClick={() => showMode('activities')}
-              className="px-8 py-4 bg-amber-500 hover:bg-amber-600 text-white font-black rounded-2xl shadow-xl shadow-amber-500/30 hover:scale-105 transition-all text-sm flex items-center gap-2"
-            >
-              <Target className="w-4 h-4" /> Spin &amp; Jam
-            </button>
+            {/* Side-by-Side Pill Badges */}
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 pt-1">
+             
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900/65 backdrop-blur-md border border-white/20 text-white text-[10px] sm:text-xs font-bold shadow-md">
+                ❤️ A U&amp;I LEARNING CIRCLE
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -342,16 +383,16 @@ export default function HomePage({ showMode }) {
       </section>
 
       {/* ────────────────────────────────────────────────────────
-          4. SHARED CORE VALUES — CUTE WORD CLOUD MATRIX
+          4. SHARED CORE VALUES — CLEAN DARK CONSTELLATION CANVAS
          ──────────────────────────────────────────────────────── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6">
         <div className="text-center space-y-2 max-w-2xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold uppercase tracking-wider">
-            🌸 SHARED CORE VALUES
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-amber-400 text-xs font-bold uppercase tracking-wider">
+            ✨ SHARED CORE VALUES
           </div>
           <h2 className="text-3xl sm:text-4xl font-black text-slate-900 font-heading">WHAT WE BELIEVE IN</h2>
           <p className="text-xs sm:text-sm text-slate-500 max-w-xl mx-auto leading-relaxed">
-            This is what our Learning Circle feels like — a warm, simple word cloud of belief, energy, and shared purpose.
+            This is what our Learning Circle feels like — a constellation of belief, energy, and shared purpose.
           </p>
         </div>
 
@@ -365,8 +406,8 @@ export default function HomePage({ showMode }) {
                 onClick={() => setActiveConstellationCategory(id)}
                 className={`px-4 py-2 rounded-2xl text-xs font-extrabold transition-all flex items-center gap-2 ${
                   isActive
-                    ? 'bg-slate-900 text-white shadow-lg scale-105 ring-2 ring-amber-400'
-                    : 'bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 shadow-sm'
+                    ? 'bg-amber-500 text-white shadow-lg scale-105 ring-2 ring-amber-300'
+                    : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 shadow-sm'
                 }`}
               >
                 <span>{emoji}</span>
@@ -376,31 +417,16 @@ export default function HomePage({ showMode }) {
           })}
         </div>
 
-        {/* CUTE WORD CLOUD CANVAS WITH LOW-OPACITY BACKGROUND WORDS */}
-        <div className="relative rounded-[2.5rem] bg-gradient-to-br from-amber-50/40 via-white to-rose-50/30 p-8 sm:p-12 border border-slate-200/80 shadow-sm overflow-hidden min-h-[440px] flex flex-col justify-between">
+        {/* CLEAN DARK CONSTELLATION CANVAS (No background text clutter) */}
+        <div className="relative rounded-[2.5rem] bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 p-8 sm:p-12 border border-slate-800 shadow-2xl overflow-hidden min-h-[400px] flex flex-col justify-between">
           
-          {/* Subtle Low-Opacity Background Word Cloud Layer */}
-          <div className="absolute inset-0 pointer-events-none select-none overflow-hidden opacity-30 flex flex-wrap items-center justify-around p-6 text-slate-300 leading-loose">
-            <span className="text-4xl font-serif text-slate-300/40 transform -rotate-6">beautiful</span>
-            <span className="text-2xl font-mono text-slate-400/30">community</span>
-            <span className="text-5xl font-sans font-light text-slate-300/40 transform rotate-3">calm</span>
-            <span className="text-3xl font-serif text-slate-400/30">peaceful</span>
-            <span className="text-4xl font-mono text-slate-300/40 transform rotate-6">fresh</span>
-            <span className="text-6xl font-black text-slate-200/50">happy</span>
-            <span className="text-3xl font-serif text-slate-400/30 transform -rotate-3">lovely</span>
-            <span className="text-2xl font-mono text-slate-300/40">environment</span>
-            <span className="text-5xl font-sans text-slate-300/40 transform rotate-2">space</span>
-            <span className="text-4xl font-serif text-slate-400/30">relaxed</span>
-            <span className="text-3xl font-mono text-slate-300/40 transform -rotate-4">content</span>
-            <span className="text-4xl font-sans text-slate-400/30">radiant</span>
-            <span className="text-5xl font-serif text-slate-300/40 transform rotate-1">chilled</span>
-            <span className="text-3xl font-mono text-slate-400/30">sociable</span>
-            <span className="text-4xl font-sans text-slate-300/40 transform -rotate-2">tranquil</span>
-            <span className="text-2xl font-serif text-slate-400/30">nature</span>
-          </div>
+          {/* Subtle Ambient Color Glow Orbs */}
+          <div className="absolute top-0 right-0 w-80 h-80 bg-brand-blue/15 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-80 h-80 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-violet-600/10 rounded-full blur-3xl pointer-events-none" />
 
           {/* Highlighted Team Values Layer */}
-          <div className="relative z-10 flex flex-wrap items-center justify-center gap-3 sm:gap-4 py-4 max-w-5xl mx-auto">
+          <div className="relative z-10 flex flex-wrap items-center justify-center gap-3 sm:gap-4 py-6 max-w-5xl mx-auto">
             {filteredConstellationValues.map((val) => {
               let sizeClasses = 'text-xs py-2 px-3.5 rounded-2xl'
               if (val.size === 'hero') {
@@ -427,18 +453,18 @@ export default function HomePage({ showMode }) {
 
           {/* Dynamic Spotlight Reveal Card */}
           {hoveredValue && (
-            <div className="relative z-20 mt-6 max-w-xl mx-auto w-full p-4 rounded-2xl bg-white border border-slate-200/90 text-slate-900 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg animate-fade-in">
+            <div className="relative z-20 mt-6 max-w-xl mx-auto w-full p-4 rounded-2xl bg-slate-900/90 backdrop-blur-md border border-slate-700/80 text-white flex flex-col sm:flex-row items-center justify-between gap-3 shadow-2xl animate-fade-in">
               <div className="flex items-center gap-3 text-left">
-                <span className="text-2xl p-2 rounded-xl bg-amber-50 border border-amber-200 shrink-0">{hoveredValue.emoji}</span>
+                <span className="text-2xl p-2 rounded-xl bg-amber-500/20 border border-amber-500/40 shrink-0">{hoveredValue.emoji}</span>
                 <div>
-                  <span className="text-[10px] font-mono font-bold text-amber-700 uppercase tracking-widest block">
+                  <span className="text-[10px] font-mono font-bold text-amber-400 uppercase tracking-widest block">
                     {hoveredValue.category}
                   </span>
                   <h4 className="text-lg font-black font-heading text-white">{hoveredValue.name}</h4>
-                  <p className="text-xs text-white/80 leading-relaxed">{hoveredValue.desc}</p>
+                  <p className="text-xs text-slate-300 leading-relaxed">{hoveredValue.desc}</p>
                 </div>
               </div>
-              <div className="shrink-0 px-3 py-1.5 rounded-xl bg-white/20 backdrop-blur-sm text-[10px] font-bold uppercase tracking-wider text-amber-200 border border-white/20">
+              <div className="shrink-0 px-3 py-1.5 rounded-xl bg-amber-500/20 text-[10px] font-bold uppercase tracking-wider text-amber-300 border border-amber-500/30">
                 PROUD X FACTOR
               </div>
             </div>

@@ -28,13 +28,13 @@ export default function Aug20S1() {
 
         {/* Attachment Button */}
         <a
-          href={getAssetUrl('docs/The-X-Factors_academic-calendar-plan.pdf')}
+          href="https://drive.google.com/drive/folders/1RUDUHaTVkUI_7avWTjMF52EFETkbS-5D"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-brand-blue hover:bg-blue-700 text-white font-bold text-xs shadow-lg shadow-blue-500/20 hover:scale-105 transition-all shrink-0"
         >
           <FileText className="w-4 h-4 text-amber-300" />
-          <span>View Full Academic Plan &amp; Calendar PDF</span>
+          <span>View Full Academic Plan &amp; Calendar</span>
           <ExternalLink className="w-3.5 h-3.5 text-white/70" />
         </a>
       </div>

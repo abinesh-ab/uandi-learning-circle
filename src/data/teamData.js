@@ -123,14 +123,14 @@ export const teamMembers = [
   },
   {
     id: 'abinesh',
-    name: 'Abinesh',
-    role: '100% Changemaker & Lead',
-    focus: 'LC Support & Tasks',
-    desc: 'Always ready to support the squad, manage tasks, guide planning, and build possibilities for our children.',
-    avatarColor: 'from-blue-600 to-amber-500',
-    avatarText: 'AB',
-    photo: getAssetUrl('team/abinesh.jpeg'),
-    specialty: 'Squad Support & Lead Mentorship',
+    name: 'Leads',
+    role: 'LC Enablers & Mentors',
+  focus: 'Volunteer Support, Class Enablement & Student Success',
+  desc: 'Here to remove roadblocks, cheer you on, and build a thriving space for both our volunteers and kids.',
+  avatarColor: 'from-blue-600 via-indigo-600 to-amber-500',
+  avatarText: 'LEADS',
+  photo: getAssetUrl('team/lead-team.jpeg'), // or your squad lead group photo
+  specialty: 'Enabling Every Volunteer to Shine',
     emoji: '👑',
   },
 ]

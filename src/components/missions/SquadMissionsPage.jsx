@@ -109,7 +109,7 @@ export default function SquadMissionsPage() {
               {isSupabaseConfigured ? (
                 <>
                   <Database className="w-3 h-3 text-emerald-600 animate-pulse" />
-                  <span>Supabase Realtime Cloud</span>
+                  <span>Realtime Cloud</span>
                 </>
               ) : (
                 <>

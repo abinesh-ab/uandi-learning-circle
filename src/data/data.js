@@ -97,7 +97,8 @@ export const kidBorderColors = [
 ]
 
 export const deckConfig = {
-  'deck-aug20': { label: 'Aug 20th — Class Strategy & Model Plan 🆕', slides: 3, prefix: 'aug20-s' },
+  'deck-aug27': { label: 'Aug 27 — Business Simulation 🆕', slides: 4, prefix: 'aug27-s' },
+  'deck-aug20': { label: 'Aug 20th — Class Strategy & Model Plan', slides: 3, prefix: 'aug20-s' },
   'deck-aug13': { label: 'Aug 13th — LC Call', slides: 7, prefix: 'aug13-s' },
   'deck-aug6': { label: 'Aug 6th — Social Contract ✅', slides: 1, prefix: 'aug6-s' },
   'deck-july30': { label: 'July 30th — LC Call', slides: 4, prefix: 'july30-s' },

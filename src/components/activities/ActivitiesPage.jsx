@@ -3,12 +3,16 @@ import confetti from 'canvas-confetti'
 import { jamQuestions, activitiesList } from '../../data/activitiesData'
 import { Lock } from 'lucide-react'
 
-export default function ActivitiesPage() {
+export default function ActivitiesPage({ spinJamUnlocked = false, onRequestUnlockSpinJam }) {
   const [spinning, setSpinning] = useState(false)
   const [selectedQuestion, setSelectedQuestion] = useState(null)
   const wheelRef = useRef(null)
 
   const spinWheel = useCallback(() => {
+    if (!spinJamUnlocked) {
+      if (onRequestUnlockSpinJam) onRequestUnlockSpinJam()
+      return
+    }
     if (spinning) return
     setSpinning(true)
     setSelectedQuestion(null)
@@ -26,7 +30,7 @@ export default function ActivitiesPage() {
       setSpinning(false)
       confetti({ particleCount: 90, spread: 80, origin: { y: 0.6 } })
     }, 4600)
-  }, [spinning])
+  }, [spinning, spinJamUnlocked, onRequestUnlockSpinJam])
 
   const resetSpin = useCallback(() => {
     setSelectedQuestion(null)
@@ -86,64 +90,85 @@ export default function ActivitiesPage() {
           <p className="text-xs sm:text-sm text-slate-600">Spin the wheel. Get a question. Let's jam.</p>
         </div>
 
-        {/* Wheel Container */}
-        <div className="relative flex justify-center py-4">
-          {/* Pointer */}
-          <div
-            className="absolute top-2 left-1/2 -translate-x-1/2 z-20 w-0 h-0"
-            style={{
-              borderLeft: '14px solid transparent',
-              borderRight: '14px solid transparent',
-              borderTop: '22px solid #7C3AED',
-            }}
-          />
-
-          <div
-            ref={wheelRef}
-            onClick={spinWheel}
-            className="w-60 h-60 sm:w-64 sm:h-64 rounded-full border-4 border-white shadow-2xl relative flex items-center justify-center cursor-pointer select-none bg-gradient-to-tr from-violet-600 via-blue-600 to-amber-500"
-            title="Click to spin!"
-          >
-            <div className="w-28 h-28 rounded-full bg-white shadow-inner flex flex-col items-center justify-center z-10 p-2">
-              <span className="text-3xl">🎲</span>
-              <span className="text-xs font-black text-slate-800 uppercase tracking-wide mt-1">
-                {spinning ? 'SPINNING...' : 'SPIN'}
-              </span>
+        {/* Lock Overlay if Spin & Jam is not unlocked yet */}
+        {!spinJamUnlocked ? (
+          <div className="p-8 bg-slate-900/90 backdrop-blur-md rounded-3xl border border-slate-700 text-white space-y-4 max-w-md mx-auto shadow-2xl my-4 animate-fade-in">
+            <div className="w-14 h-14 rounded-full bg-violet-500/20 border border-violet-500/40 text-violet-400 flex items-center justify-center mx-auto">
+              <Lock className="w-7 h-7" />
             </div>
-          </div>
-        </div>
-
-        {/* Spin Action Button */}
-        <button
-          onClick={spinWheel}
-          disabled={spinning}
-          className="px-10 py-4 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white font-black text-base rounded-2xl shadow-lg shadow-violet-600/30 hover:scale-105 transition-all inline-flex items-center gap-2"
-        >
-          {spinning ? '🌀 Spinning Wheel (4s)...' : '🎲 SPIN THE WHEEL'}
-        </button>
-
-        {/* SINGLE Revealed Question Result */}
-        {selectedQuestion && (
-          <div className="p-6 bg-white rounded-3xl border-2 border-violet-400 space-y-4 shadow-xl text-center max-w-xl mx-auto animate-fade-in">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-100 text-violet-800 text-[10px] font-black uppercase tracking-wider">
-              ✨ YOUR JAM TOPIC • {selectedQuestion.tag}
+            <div className="space-y-1">
+              <h3 className="text-xl font-black font-heading text-white">Spin &amp; Jam Locked</h3>
+              <p className="text-xs text-slate-300">Enter passcode to unlock the wheel and play.</p>
             </div>
-
-            <h3 className="text-xl sm:text-2xl font-black text-slate-900 font-heading leading-snug">
-              "{selectedQuestion.question}"
-            </h3>
-
-            <p className="text-xs font-bold text-brand-blue pt-1">
-              🎤 Your turn. Take it away.
-            </p>
-
             <button
-              onClick={resetSpin}
-              className="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl shadow-sm transition-all"
+              onClick={onRequestUnlockSpinJam}
+              className="w-full py-3.5 bg-violet-600 hover:bg-violet-500 text-white font-black text-xs uppercase tracking-wider rounded-2xl shadow-xl shadow-violet-600/40 transition-all hover:scale-105"
             >
-              🔄 Spin Again
+              Unlock Spin &amp; Jam 🎲
             </button>
           </div>
+        ) : (
+          <>
+            {/* Wheel Container */}
+            <div className="relative flex justify-center py-4">
+              {/* Pointer */}
+              <div
+                className="absolute top-2 left-1/2 -translate-x-1/2 z-20 w-0 h-0"
+                style={{
+                  borderLeft: '14px solid transparent',
+                  borderRight: '14px solid transparent',
+                  borderTop: '22px solid #7C3AED',
+                }}
+              />
+
+              <div
+                ref={wheelRef}
+                onClick={spinWheel}
+                className="w-60 h-60 sm:w-64 sm:h-64 rounded-full border-4 border-white shadow-2xl relative flex items-center justify-center cursor-pointer select-none bg-gradient-to-tr from-violet-600 via-blue-600 to-amber-500"
+                title="Click to spin!"
+              >
+                <div className="w-28 h-28 rounded-full bg-white shadow-inner flex flex-col items-center justify-center z-10 p-2">
+                  <span className="text-3xl">🎲</span>
+                  <span className="text-xs font-black text-slate-800 uppercase tracking-wide mt-1">
+                    {spinning ? 'SPINNING...' : 'SPIN'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Spin Action Button */}
+            <button
+              onClick={spinWheel}
+              disabled={spinning}
+              className="px-10 py-4 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white font-black text-base rounded-2xl shadow-lg shadow-violet-600/30 hover:scale-105 transition-all inline-flex items-center gap-2"
+            >
+              {spinning ? '🌀 Spinning Wheel (4s)...' : '🎲 SPIN THE WHEEL'}
+            </button>
+
+            {/* SINGLE Revealed Question Result */}
+            {selectedQuestion && (
+              <div className="p-6 bg-white rounded-3xl border-2 border-violet-400 space-y-4 shadow-xl text-center max-w-xl mx-auto animate-fade-in">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-100 text-violet-800 text-[10px] font-black uppercase tracking-wider">
+                  ✨ YOUR JAM TOPIC • {selectedQuestion.tag}
+                </div>
+
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 font-heading leading-snug">
+                  "{selectedQuestion.question}"
+                </h3>
+
+                <p className="text-xs font-bold text-brand-blue pt-1">
+                  🎤 Your turn. Take it away.
+                </p>
+
+                <button
+                  onClick={resetSpin}
+                  className="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl shadow-sm transition-all"
+                >
+                  🔄 Spin Again
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
