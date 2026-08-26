@@ -1,6 +1,6 @@
 -- ============================================================================
 -- SUPABASE POSTGRES ARCHITECTURE FOR THE X FACTORS (U&I LEARNING CIRCLE)
--- Execute this script directly in the Supabase SQL Editor (https://app.supabase.com)
+-- Safe, Idempotent SQL Setup Script (Safe to re-run multiple times)
 -- ============================================================================
 
 -- 1. Enable UUID extension
@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS public.missions (
     volunteer_name TEXT NOT NULL,
     title TEXT NOT NULL,
     category TEXT DEFAULT 'General',
-    status TEXT DEFAULT 'todo', -- 'todo' | 'completed'
+    status TEXT DEFAULT 'todo',
     due_date TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     completed_at TIMESTAMPTZ
@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS public.student_logs (
     volunteer_name TEXT NOT NULL,
     session_date DATE DEFAULT CURRENT_DATE,
     topics_covered TEXT NOT NULL,
-    student_understanding TEXT DEFAULT 'Good', -- 'Needs Focus' | 'Good' | 'Mastered'
+    student_understanding TEXT DEFAULT 'Good',
     homework_assigned TEXT,
     notes TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW()
@@ -83,15 +83,14 @@ CREATE TABLE IF NOT EXISTS public.student_logs (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.generic_entries (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    module_type TEXT NOT NULL, -- e.g. 'pre_assessment', 'call_feedback', 'poll_response', 'reflections'
+    module_type TEXT NOT NULL,
     author_name TEXT NOT NULL,
     payload JSONB NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- ----------------------------------------------------------------------------
--- ROW-LEVEL SECURITY (RLS) POLICIES - OPEN ACCESS FOR VOLUNTEER SITE
--- Allows public read, insert, update without requiring auth logins
+-- ROW-LEVEL SECURITY (RLS) POLICIES - OPEN PUBLIC ACCESS FOR VOLUNTEERS
 -- ----------------------------------------------------------------------------
 
 -- Enable RLS on all tables
@@ -101,7 +100,7 @@ ALTER TABLE public.missions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.student_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.generic_entries ENABLE ROW LEVEL SECURITY;
 
--- Drop existing policies if re-running
+-- Cleanly drop policies if they already exist to avoid duplicate errors
 DROP POLICY IF EXISTS "Public access for volunteers" ON public.volunteers;
 DROP POLICY IF EXISTS "Public access for affirmations" ON public.affirmations;
 DROP POLICY IF EXISTS "Public access for missions" ON public.missions;
@@ -115,9 +114,22 @@ CREATE POLICY "Public access for missions" ON public.missions FOR ALL USING (tru
 CREATE POLICY "Public access for student_logs" ON public.student_logs FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Public access for generic_entries" ON public.generic_entries FOR ALL USING (true) WITH CHECK (true);
 
--- Enable Realtime for all tables
-ALTER PUBLICATION supabase_realtime ADD TABLE public.volunteers;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.affirmations;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.missions;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.student_logs;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.generic_entries;
+-- Enable Realtime for all tables (Safely ignore if publication table already exists)
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'volunteers') THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.volunteers;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'affirmations') THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.affirmations;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'missions') THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.missions;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'student_logs') THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.student_logs;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'generic_entries') THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.generic_entries;
+    END IF;
+END $$;
