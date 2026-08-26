@@ -4,7 +4,7 @@ import { teamMembers } from '../../data/teamData'
 import { resourcesData } from '../../data/resourcesData'
 import { getAssetUrl } from '../../utils/assetUrl'
 
-// ── Shared Core Values Constellation Data ────────────────────
+// ── Shared Core Values Data ────────────────────
 const constellationValues = [
   {
     name: 'CHANGEMAKERS',
@@ -12,8 +12,7 @@ const constellationValues = [
     emoji: '👑',
     desc: 'Transforming futures and building real community impact one class at a time.',
     size: 'hero',
-    color: 'from-amber-400 via-yellow-300 to-amber-500 text-slate-950 font-black',
-    bgGlow: 'shadow-amber-500/40 border-amber-300 ring-2 ring-amber-400/50',
+    color: 'bg-amber-100/90 text-amber-950 border-amber-300 hover:bg-amber-200',
     rotation: 'rotate-0',
   },
   {
@@ -22,8 +21,7 @@ const constellationValues = [
     emoji: '⚡',
     desc: 'Overcoming every obstacle and showing up with relentless energy every Saturday.',
     size: 'hero',
-    color: 'from-rose-500 via-red-500 to-pink-500 text-white font-black',
-    bgGlow: 'shadow-rose-500/40 border-rose-300 ring-2 ring-rose-400/50',
+    color: 'bg-rose-100/90 text-rose-950 border-rose-300 hover:bg-rose-200',
     rotation: '-rotate-2',
   },
   {
@@ -32,8 +30,7 @@ const constellationValues = [
     emoji: '❤️',
     desc: 'Empathy, warmth, and genuine care for every child and team member.',
     size: 'hero',
-    color: 'from-pink-500 via-rose-400 to-rose-600 text-white font-black',
-    bgGlow: 'shadow-pink-500/40 border-pink-300 ring-2 ring-pink-400/50',
+    color: 'bg-pink-100/90 text-pink-950 border-pink-300 hover:bg-pink-200',
     rotation: 'rotate-1',
   },
   {
@@ -42,8 +39,7 @@ const constellationValues = [
     emoji: '🎯',
     desc: 'Resilient and unwavering focus on creating academic breakthroughs for kids.',
     size: 'hero',
-    color: 'from-blue-600 via-indigo-600 to-blue-700 text-white font-black',
-    bgGlow: 'shadow-blue-500/40 border-blue-300 ring-2 ring-blue-400/50',
+    color: 'bg-blue-100/90 text-blue-950 border-blue-300 hover:bg-blue-200',
     rotation: 'rotate-2',
   },
   {
@@ -52,8 +48,7 @@ const constellationValues = [
     emoji: '🛡️',
     desc: 'A safe, supportive space where everyone can speak openly and lean on each other.',
     size: 'medium',
-    color: 'from-emerald-500 to-teal-600 text-white font-extrabold',
-    bgGlow: 'shadow-emerald-500/25 border-emerald-300',
+    color: 'bg-emerald-100/90 text-emerald-950 border-emerald-300 hover:bg-emerald-200',
     rotation: '-rotate-1',
   },
   {
@@ -62,8 +57,7 @@ const constellationValues = [
     emoji: '🧠',
     desc: 'Constantly exchanging teaching techniques, ideas, and growing together.',
     size: 'medium',
-    color: 'from-violet-600 to-purple-600 text-white font-extrabold',
-    bgGlow: 'shadow-violet-500/25 border-violet-300',
+    color: 'bg-violet-100/90 text-violet-950 border-violet-300 hover:bg-violet-200',
     rotation: 'rotate-2',
   },
   {
@@ -72,8 +66,7 @@ const constellationValues = [
     emoji: '🔄',
     desc: 'Integrating Maths, Accountancy, Pedagogy, and creative activities seamlessly.',
     size: 'medium',
-    color: 'from-cyan-500 to-blue-600 text-white font-extrabold',
-    bgGlow: 'shadow-cyan-500/25 border-cyan-300',
+    color: 'bg-cyan-100/90 text-cyan-950 border-cyan-300 hover:bg-cyan-200',
     rotation: '-rotate-2',
   },
   {
@@ -82,8 +75,7 @@ const constellationValues = [
     emoji: '⭐',
     desc: 'Every volunteer bringing their authentic best and continuous self-improvement.',
     size: 'medium',
-    color: 'from-amber-500 to-yellow-500 text-slate-950 font-extrabold',
-    bgGlow: 'shadow-amber-400/25 border-amber-200',
+    color: 'bg-yellow-100/90 text-yellow-950 border-yellow-300 hover:bg-yellow-200',
     rotation: 'rotate-1',
   },
   {
@@ -92,8 +84,7 @@ const constellationValues = [
     emoji: '🤝',
     desc: 'Lifting each other up during tough classes and celebrating small wins together.',
     size: 'medium',
-    color: 'from-orange-500 to-amber-600 text-white font-extrabold',
-    bgGlow: 'shadow-orange-500/25 border-orange-300',
+    color: 'bg-orange-100/90 text-orange-950 border-orange-300 hover:bg-orange-200',
     rotation: 'rotate-0',
   },
   {
@@ -102,8 +93,7 @@ const constellationValues = [
     emoji: '🤗',
     desc: 'Approaching children as a warm mentor, positive role model, and lifelong friend.',
     size: 'regular',
-    color: 'from-teal-400 to-emerald-500 text-slate-950 font-bold',
-    bgGlow: 'border-teal-200',
+    color: 'bg-teal-100/90 text-teal-950 border-teal-300 hover:bg-teal-200',
     rotation: '-rotate-1',
   },
   {
@@ -112,8 +102,7 @@ const constellationValues = [
     emoji: '🔗',
     desc: 'One tribe, one heart, and one shared mission to transform children’s futures.',
     size: 'regular',
-    color: 'from-purple-500 to-indigo-600 text-white font-bold',
-    bgGlow: 'border-purple-300',
+    color: 'bg-purple-100/90 text-purple-950 border-purple-300 hover:bg-purple-200',
     rotation: 'rotate-2',
   },
   {
@@ -122,8 +111,7 @@ const constellationValues = [
     emoji: '⏰',
     desc: 'Respecting and valuing every precious Saturday minute we get with our kids.',
     size: 'regular',
-    color: 'from-blue-400 to-cyan-500 text-slate-950 font-bold',
-    bgGlow: 'border-blue-200',
+    color: 'bg-sky-100/90 text-sky-950 border-sky-300 hover:bg-sky-200',
     rotation: '-rotate-2',
   },
   {
@@ -132,8 +120,7 @@ const constellationValues = [
     emoji: '📐',
     desc: 'Hands-on, activity-based learning that makes abstract concepts tangible.',
     size: 'regular',
-    color: 'from-emerald-400 to-green-500 text-slate-950 font-bold',
-    bgGlow: 'border-emerald-200',
+    color: 'bg-green-100/90 text-green-950 border-green-300 hover:bg-green-200',
     rotation: 'rotate-1',
   },
   {
@@ -142,8 +129,7 @@ const constellationValues = [
     emoji: '🔥',
     desc: 'Deep dedication to our kids academic growth and emotional well-being.',
     size: 'regular',
-    color: 'from-red-500 to-rose-600 text-white font-bold',
-    bgGlow: 'border-red-300',
+    color: 'bg-red-100/90 text-red-950 border-red-300 hover:bg-red-200',
     rotation: '-rotate-1',
   },
   {
@@ -152,8 +138,7 @@ const constellationValues = [
     emoji: '📜',
     desc: 'Deep preparation, subject mastery, and solid pedagogical foundations.',
     size: 'regular',
-    color: 'from-slate-700 to-slate-900 text-white font-bold',
-    bgGlow: 'border-slate-400',
+    color: 'bg-slate-200 text-slate-900 border-slate-300 hover:bg-slate-300',
     rotation: 'rotate-1',
   },
   {
@@ -162,8 +147,7 @@ const constellationValues = [
     emoji: '🏆',
     desc: 'Striving for excellence and high standards without compromising warmth.',
     size: 'regular',
-    color: 'from-amber-600 to-orange-600 text-white font-bold',
-    bgGlow: 'border-amber-400',
+    color: 'bg-amber-100/90 text-amber-900 border-amber-300 hover:bg-amber-200',
     rotation: '-rotate-1',
   },
 ]
@@ -192,50 +176,27 @@ export default function HomePage({ showMode }) {
   }, [activeConstellationCategory])
 
   return (
-    <div className="relative min-h-screen space-y-16 pb-20 overflow-x-hidden">
+    <div className="relative pt-20 pb-28 space-y-16 animate-fade-in">
       {/* ────────────────────────────────────────────────────────
-          1. HERO SECTION
+          1. HERO BANNER
          ──────────────────────────────────────────────────────── */}
-      <section className="relative min-h-[80vh] flex flex-col items-center justify-center pt-8 pb-12 px-4 overflow-hidden rounded-b-[3rem] shadow-2xl">
-        {/* Dark warm hero background */}
-        <div className="home-hero-bg">
-          <img src={getAssetUrl('hero-home.png')} alt="" onError={(e) => (e.target.style.display = 'none')} />
-        </div>
+      <section className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="glass-card p-8 sm:p-14 rounded-[2.5rem] border border-blue-200/80 bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white text-center space-y-6 shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-brand-blue/20 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-amber-500/20 rounded-full blur-3xl pointer-events-none" />
 
-        {/* Ambient floating doodles & math symbols */}
-        <div className="absolute top-12 left-10 text-4xl float-anim opacity-35 select-none pointer-events-none" style={{ animationDelay: '0s' }}>
-          📚
-        </div>
-        <div className="absolute top-20 right-16 text-3xl float-slow opacity-30 select-none pointer-events-none" style={{ animationDelay: '1s' }}>
-          💡
-        </div>
-        <div className="absolute bottom-28 left-16 text-3xl float-anim opacity-30 select-none pointer-events-none" style={{ animationDelay: '0.5s' }}>
-          🌱
-        </div>
-        <div className="absolute bottom-20 right-12 text-4xl float-slow opacity-35 select-none pointer-events-none" style={{ animationDelay: '1.5s' }}>
-          ⭐
-        </div>
-        <div className="absolute top-36 left-1/3 text-2xl float-anim opacity-25 select-none pointer-events-none" style={{ animationDelay: '2s' }}>
-          🔭
-        </div>
-
-        {/* Hero Content */}
-        <div className="relative z-10 text-center px-4 space-y-6 max-w-4xl mx-auto">
-          {/* Identity Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-xs font-bold uppercase tracking-wider shadow-lg">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span>MSS FN &amp; Tuitions • Marialaya, CBE • A U&amp;I Learning Circle</span>
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-amber-300 text-xs font-bold uppercase tracking-wider">
+            <Sparkles className="w-4 h-4 text-amber-400" /> MSS FN &amp; TUITIONS • LEARNING CIRCLE
           </div>
 
-          {/* Headline & Slogan */}
-          <div className="space-y-3">
-            <h1 className="text-5xl sm:text-7xl md:text-8xl font-black text-white tracking-tight leading-none font-heading drop-shadow-md">
-              THE X FACTORS
-            </h1>
-            <p className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-yellow-300 to-rose-400 tracking-widest uppercase font-heading">
-              Unlock the Unknown
-            </p>
-          </div>
+          {/* Title */}
+          <h1 className="text-4xl sm:text-6xl font-black font-heading tracking-tight max-w-4xl mx-auto leading-tight">
+            THE X FACTORS <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-rose-300 to-sky-300">
+              UNLOCK THE UNKNOWN
+            </span>
+          </h1>
 
           {/* Subtitle */}
           <p className="text-base sm:text-xl text-white/80 font-medium max-w-2xl mx-auto leading-relaxed">
@@ -255,12 +216,6 @@ export default function HomePage({ showMode }) {
               className="px-8 py-4 bg-amber-500 hover:bg-amber-600 text-white font-black rounded-2xl shadow-xl shadow-amber-500/30 hover:scale-105 transition-all text-sm flex items-center gap-2"
             >
               <Target className="w-4 h-4" /> Spin &amp; Jam
-            </button>
-            <button
-              onClick={() => showMode('resources')}
-              className="px-8 py-4 bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/30 text-white font-black rounded-2xl hover:scale-105 transition-all text-sm flex items-center gap-2"
-            >
-              <BookOpen className="w-4 h-4" /> Knowledge Toolbox
             </button>
           </div>
         </div>
@@ -360,7 +315,7 @@ export default function HomePage({ showMode }) {
             </div>
             <h3 className="text-xl font-bold text-slate-900 font-heading">Team</h3>
             <p className="text-xs text-slate-600 leading-relaxed">
-              Meet the 10 Changemakers behind The X Factors.
+              Meet the 11 Changemakers behind The X Factors.
             </p>
             <div className="pt-2 text-xs font-black text-amber-600 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
               <span>Meet Changemakers</span> →
@@ -387,18 +342,16 @@ export default function HomePage({ showMode }) {
       </section>
 
       {/* ────────────────────────────────────────────────────────
-          4. SHARED CORE VALUES — WORD CLOUD CONSTELLATION HUB
+          4. SHARED CORE VALUES — CUTE WORD CLOUD MATRIX
          ──────────────────────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
-        <div className="text-center space-y-2 max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-violet-600 to-amber-500 text-white text-xs font-extrabold uppercase tracking-wider shadow-md">
-            <span>✨ Living Culture &amp; Identity</span>
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6">
+        <div className="text-center space-y-2 max-w-2xl mx-auto">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold uppercase tracking-wider">
+            🌸 SHARED CORE VALUES
           </div>
-          <h2 className="text-3xl sm:text-5xl font-black text-slate-900 font-heading">
-            SHARED CORE VALUES — <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 via-rose-500 to-brand-blue">CONSTELLATION</span>
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-500 max-w-xl mx-auto">
-            This is what our Learning Circle feels like — a vibrant cloud of belief, energy, and shared purpose that makes us proud to stick to it.
+          <h2 className="text-3xl sm:text-4xl font-black text-slate-900 font-heading">WHAT WE BELIEVE IN</h2>
+          <p className="text-xs sm:text-sm text-slate-500 max-w-xl mx-auto leading-relaxed">
+            This is what our Learning Circle feels like — a warm, simple word cloud of belief, energy, and shared purpose.
           </p>
         </div>
 
@@ -423,22 +376,37 @@ export default function HomePage({ showMode }) {
           })}
         </div>
 
-        {/* WORD CLOUD CONSTELLATION CANVAS */}
-        <div className="relative rounded-[2.5rem] bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900 p-8 sm:p-12 border-2 border-slate-800 shadow-2xl overflow-hidden min-h-[460px] flex flex-col justify-between">
-          {/* Ambient Background Starfield & Glow Orbs */}
-          <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute top-1/2 right-1/3 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+        {/* CUTE WORD CLOUD CANVAS WITH LOW-OPACITY BACKGROUND WORDS */}
+        <div className="relative rounded-[2.5rem] bg-gradient-to-br from-amber-50/40 via-white to-rose-50/30 p-8 sm:p-12 border border-slate-200/80 shadow-sm overflow-hidden min-h-[440px] flex flex-col justify-between">
+          
+          {/* Subtle Low-Opacity Background Word Cloud Layer */}
+          <div className="absolute inset-0 pointer-events-none select-none overflow-hidden opacity-30 flex flex-wrap items-center justify-around p-6 text-slate-300 leading-loose">
+            <span className="text-4xl font-serif text-slate-300/40 transform -rotate-6">beautiful</span>
+            <span className="text-2xl font-mono text-slate-400/30">community</span>
+            <span className="text-5xl font-sans font-light text-slate-300/40 transform rotate-3">calm</span>
+            <span className="text-3xl font-serif text-slate-400/30">peaceful</span>
+            <span className="text-4xl font-mono text-slate-300/40 transform rotate-6">fresh</span>
+            <span className="text-6xl font-black text-slate-200/50">happy</span>
+            <span className="text-3xl font-serif text-slate-400/30 transform -rotate-3">lovely</span>
+            <span className="text-2xl font-mono text-slate-300/40">environment</span>
+            <span className="text-5xl font-sans text-slate-300/40 transform rotate-2">space</span>
+            <span className="text-4xl font-serif text-slate-400/30">relaxed</span>
+            <span className="text-3xl font-mono text-slate-300/40 transform -rotate-4">content</span>
+            <span className="text-4xl font-sans text-slate-400/30">radiant</span>
+            <span className="text-5xl font-serif text-slate-300/40 transform rotate-1">chilled</span>
+            <span className="text-3xl font-mono text-slate-400/30">sociable</span>
+            <span className="text-4xl font-sans text-slate-300/40 transform -rotate-2">tranquil</span>
+            <span className="text-2xl font-serif text-slate-400/30">nature</span>
+          </div>
 
-          {/* Floating Word Cloud Items */}
-          <div className="relative z-10 flex flex-wrap items-center justify-center gap-3 sm:gap-5 py-6 max-w-5xl mx-auto">
+          {/* Highlighted Team Values Layer */}
+          <div className="relative z-10 flex flex-wrap items-center justify-center gap-3 sm:gap-4 py-4 max-w-5xl mx-auto">
             {filteredConstellationValues.map((val) => {
-              const isHovered = hoveredValue?.name === val.name
-              let sizeClasses = 'text-xs py-2 px-4 rounded-2xl'
+              let sizeClasses = 'text-xs py-2 px-3.5 rounded-2xl'
               if (val.size === 'hero') {
-                sizeClasses = 'text-base sm:text-xl py-3.5 px-6 rounded-3xl shadow-2xl scale-105 sm:scale-110 font-black tracking-wide'
+                sizeClasses = 'text-sm sm:text-base py-3 px-5 rounded-3xl shadow-md font-black tracking-wide'
               } else if (val.size === 'medium') {
-                sizeClasses = 'text-sm sm:text-base py-2.5 px-5 rounded-2xl shadow-xl font-bold'
+                sizeClasses = 'text-xs sm:text-sm py-2.5 px-4 rounded-2xl shadow-sm font-extrabold'
               }
 
               return (
@@ -446,10 +414,10 @@ export default function HomePage({ showMode }) {
                   key={val.name}
                   onMouseEnter={() => setHoveredValue(val)}
                   onClick={() => setHoveredValue(val)}
-                  className={`group relative cursor-pointer transition-all duration-300 ease-out border backdrop-blur-md bg-gradient-to-r ${val.color} ${val.bgGlow} ${sizeClasses} ${val.rotation} hover:scale-115 hover:z-30 hover:-translate-y-1`}
+                  className={`group relative cursor-pointer transition-all duration-300 ease-out border backdrop-blur-md ${val.color} ${sizeClasses} ${val.rotation} hover:scale-110 hover:z-20 hover:-translate-y-0.5`}
                 >
-                  <span className="flex items-center gap-2">
-                    <span className="text-lg sm:text-xl group-hover:scale-125 transition-transform">{val.emoji}</span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="text-base sm:text-lg group-hover:scale-125 transition-transform">{val.emoji}</span>
                     <span>{val.name}</span>
                   </span>
                 </div>
@@ -457,13 +425,13 @@ export default function HomePage({ showMode }) {
             })}
           </div>
 
-          {/* DYNAMIC SPOTLIGHT CARD (HOVER / CLICK REVEAL) */}
+          {/* Dynamic Spotlight Reveal Card */}
           {hoveredValue && (
-            <div className="relative z-20 mt-6 max-w-2xl mx-auto w-full p-4 sm:p-5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl animate-fade-in">
+            <div className="relative z-20 mt-6 max-w-xl mx-auto w-full p-4 rounded-2xl bg-white border border-slate-200/90 text-slate-900 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg animate-fade-in">
               <div className="flex items-center gap-3 text-left">
-                <span className="text-3xl p-2.5 rounded-2xl bg-white/15 shrink-0">{hoveredValue.emoji}</span>
+                <span className="text-2xl p-2 rounded-xl bg-amber-50 border border-amber-200 shrink-0">{hoveredValue.emoji}</span>
                 <div>
-                  <span className="text-[10px] font-mono font-bold text-amber-300 uppercase tracking-widest block">
+                  <span className="text-[10px] font-mono font-bold text-amber-700 uppercase tracking-widest block">
                     {hoveredValue.category}
                   </span>
                   <h4 className="text-lg font-black font-heading text-white">{hoveredValue.name}</h4>

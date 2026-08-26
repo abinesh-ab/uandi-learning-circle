@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Heart, Sparkles, Plus, Trash2, Send, X, Shield, Lock, RotateCcw, Filter, Check } from 'lucide-react'
+import { Heart, Sparkles, Plus, Trash2, Send, X, Lock, Filter, Check, Database, HardDrive } from 'lucide-react'
 import { teamMembers } from '../../data/teamData'
 import { useGratitudeVault } from '../../hooks/useGratitudeVault'
 
@@ -41,10 +41,11 @@ const COLOR_MAP = {
   },
 }
 
-const QUICK_EMOJIS = ['🌟', '🌻', '🚀', '❤️', '👏', '🧠', '🤝', '🔥', '💡', '👑']
+const QUICK_EMOJIS = ['🌟', '🌻', '🐝', '🚀', '❤️', '👏', '🧠', '🤝', '🔥', '💡', '👑']
 
 export default function GratitudeVaultPage({ showMode }) {
-  const { affirmations, savedSender, addAffirmation, toggleReaction, deleteAffirmation, resetVaultData } = useGratitudeVault()
+  const { affirmations, isLoading, isSupabaseConfigured, savedSender, addAffirmation, toggleReaction, deleteAffirmation } =
+    useGratitudeVault()
 
   const [selectedVolunteer, setSelectedVolunteer] = useState('ALL') // 'ALL' | volunteer name
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -109,13 +110,51 @@ export default function GratitudeVaultPage({ showMode }) {
   }
 
   return (
-    <div className="relative min-h-screen pt-20 pb-28 px-4 max-w-7xl mx-auto space-y-8 animate-fade-in">
+    <div className="relative min-h-screen pt-14 pb-20 px-4 max-w-7xl mx-auto space-y-6 animate-fade-in">
+      {/* Subtle Floating Bees & Sunflowers Background Accents */}
+      <div className="absolute top-10 left-6 text-2xl opacity-25 float-anim select-none pointer-events-none" style={{ animationDelay: '0s' }}>
+        🐝
+      </div>
+      <div className="absolute top-16 right-10 text-3xl opacity-25 float-slow select-none pointer-events-none" style={{ animationDelay: '1.2s' }}>
+        🌻
+      </div>
+      <div className="absolute top-36 left-1/4 text-xl opacity-20 float-anim select-none pointer-events-none" style={{ animationDelay: '0.7s' }}>
+        🌻
+      </div>
+      <div className="absolute top-44 right-1/4 text-2xl opacity-25 float-slow select-none pointer-events-none" style={{ animationDelay: '1.8s' }}>
+        🐝
+      </div>
+
       {/* Hero Header */}
-      <div className="text-center space-y-3 max-w-3xl mx-auto">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold uppercase tracking-wider shadow-sm">
-          <Heart className="w-4 h-4 text-rose-500 fill-rose-500" /> The Gratitude Vault
+      <div className="text-center space-y-2.5 max-w-3xl mx-auto relative z-10">
+        <div className="flex items-center justify-center gap-2 flex-wrap">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold uppercase tracking-wider shadow-2xs">
+            <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" /> The Gratitude Vault <span className="text-amber-500">🐝 🌻</span>
+          </div>
+
+          {/* Database Mode Status Indicator */}
+          <div
+            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
+              isSupabaseConfigured
+                ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                : 'bg-amber-50 text-amber-800 border-amber-200'
+            }`}
+          >
+            {isSupabaseConfigured ? (
+              <>
+                <Database className="w-3 h-3 text-emerald-600 animate-pulse" />
+                <span>Supabase Realtime Cloud</span>
+              </>
+            ) : (
+              <>
+                <HardDrive className="w-3 h-3 text-amber-600" />
+                <span>Local Storage Mode</span>
+              </>
+            )}
+          </div>
         </div>
-        <h1 className="text-4xl sm:text-5xl font-black text-slate-900 font-heading">
+
+        <h1 className="text-3xl sm:text-5xl font-black text-slate-900 font-heading">
           OUR SQUAD <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 via-amber-500 to-brand-blue">KUDOS &amp; LOVE</span>
         </h1>
         <p className="text-xs sm:text-sm text-slate-600 max-w-xl mx-auto leading-relaxed">
@@ -123,19 +162,19 @@ export default function GratitudeVaultPage({ showMode }) {
         </p>
 
         {/* Primary Action Button */}
-        <div className="pt-2">
+        <div className="pt-1">
           <button
             onClick={() => setIsModalOpen(true)}
-            className="px-8 py-4 bg-gradient-to-r from-rose-500 via-pink-500 to-amber-500 hover:from-rose-600 hover:to-amber-600 text-white font-black text-sm rounded-2xl shadow-xl shadow-rose-500/25 hover:scale-105 transition-all inline-flex items-center gap-2"
+            className="px-7 py-3.5 bg-gradient-to-r from-rose-500 via-pink-500 to-amber-500 hover:from-rose-600 hover:to-amber-600 text-white font-black text-xs sm:text-sm rounded-2xl shadow-xl shadow-rose-500/25 hover:scale-105 transition-all inline-flex items-center gap-2"
           >
-            <Plus className="w-5 h-5" />
+            <Plus className="w-4 h-4" />
             <span>Give Affirmation ✨</span>
           </button>
         </div>
       </div>
 
       {/* Volunteer Selector / Avatar Strip */}
-      <div className="space-y-3">
+      <div className="space-y-2.5 relative z-10">
         <div className="flex items-center justify-between px-2">
           <span className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
             <Filter className="w-3.5 h-3.5" /> Filter by Volunteer Wall
@@ -145,11 +184,11 @@ export default function GratitudeVaultPage({ showMode }) {
           </span>
         </div>
 
-        <div className="flex items-center gap-2 overflow-x-auto pb-3 pt-1 px-1 scrollbar-none">
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 pt-1 px-1 scrollbar-none">
           {/* All Tribe Pill */}
           <button
             onClick={() => setSelectedVolunteer('ALL')}
-            className={`px-4 py-2.5 rounded-2xl text-xs font-extrabold transition-all shrink-0 flex items-center gap-2 border shadow-sm ${
+            className={`px-4 py-2 rounded-2xl text-xs font-extrabold transition-all shrink-0 flex items-center gap-2 border shadow-sm ${
               selectedVolunteer === 'ALL'
                 ? 'bg-slate-900 text-white border-slate-900 scale-105 ring-2 ring-rose-400'
                 : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
@@ -210,30 +249,40 @@ export default function GratitudeVaultPage({ showMode }) {
         </div>
       </div>
 
-      {/* Affirmations Sticky Notes Grid */}
-      {filteredAffirmations.length === 0 ? (
-        <div className="glass-card p-12 rounded-3xl border border-slate-200 text-center space-y-4 max-w-md mx-auto my-8">
-          <span className="text-5xl block">💌</span>
-          <h3 className="text-lg font-bold text-slate-800 font-heading">No affirmations posted yet</h3>
+      {/* Loading Skeletons */}
+      {isLoading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 relative z-10">
+          {[1, 2, 3].map((n) => (
+            <div key={n} className="glass-card p-6 rounded-3xl border border-slate-200 bg-white/60 space-y-4 animate-pulse">
+              <div className="h-4 w-24 bg-slate-200 rounded-full" />
+              <div className="h-12 bg-slate-200 rounded-xl" />
+              <div className="h-4 w-32 bg-slate-200 rounded-md" />
+            </div>
+          ))}
+        </div>
+      ) : filteredAffirmations.length === 0 ? (
+        <div className="glass-card p-10 rounded-3xl border border-slate-200 text-center space-y-3 max-w-md mx-auto my-6 relative z-10">
+          <span className="text-4xl block">💌 🌻</span>
+          <h3 className="text-base font-bold text-slate-800 font-heading">No affirmations posted yet</h3>
           <p className="text-xs text-slate-500 leading-relaxed">
             Be the first to leave a warm note of gratitude for {selectedVolunteer === 'ALL' ? 'the squad' : selectedVolunteer}!
           </p>
           <button
             onClick={() => setIsModalOpen(true)}
-            className="px-6 py-2.5 bg-rose-500 text-white text-xs font-bold rounded-xl shadow-md"
+            className="px-5 py-2.5 bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold rounded-xl shadow-md transition-all"
           >
             Give Affirmation ✨
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 relative z-10">
           {filteredAffirmations.map((note) => {
             const theme = COLOR_MAP[note.color] || COLOR_MAP.amber
 
             return (
               <div
                 key={note.id}
-                className={`glass-card p-6 rounded-3xl border ${theme.border} ${theme.bg} space-y-4 relative shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group`}
+                className={`glass-card p-5 rounded-3xl border ${theme.border} ${theme.bg} space-y-3 relative shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group`}
               >
                 {/* Header Badge */}
                 <div className="flex items-center justify-between gap-2">
@@ -247,7 +296,7 @@ export default function GratitudeVaultPage({ showMode }) {
                       setTargetDeleteId(note.id)
                       setIsDeleteModalOpen(true)
                     }}
-                    title="Delete affirmation (Requires passcode 'X')"
+                    title="Delete affirmation note"
                     className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-white/60"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -256,35 +305,35 @@ export default function GratitudeVaultPage({ showMode }) {
 
                 {/* Message Body */}
                 <div className="space-y-2 py-1">
-                  <p className={`text-sm sm:text-base font-semibold ${theme.text} leading-relaxed font-body whitespace-pre-line`}>
+                  <p className={`text-xs sm:text-sm font-semibold ${theme.text} leading-relaxed font-body whitespace-pre-line`}>
                     "{note.message}"
                   </p>
                 </div>
 
                 {/* Attribution & Reaction Bar */}
-                <div className="space-y-3 pt-2 border-t border-slate-200/60">
+                <div className="space-y-2.5 pt-2 border-t border-slate-200/60">
                   <div className="flex items-center justify-between text-xs">
                     <span className="font-extrabold text-slate-900 font-heading">From: {note.sender}</span>
                     <span className="text-[10px] text-slate-500 font-mono">{note.timestamp}</span>
                   </div>
 
                   {/* Reaction Buttons */}
-                  <div className="flex items-center gap-1.5 flex-wrap pt-1">
-                    {['❤️', '🔥', '👏', '🌟'].map((emoji) => {
+                  <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                    {['❤️', '🔥', '👏', '🌟', '🐝', '🌻'].map((emoji) => {
                       const count = note.reactions?.[emoji] || 0
 
                       return (
                         <button
                           key={emoji}
                           onClick={() => toggleReaction(note.id, emoji)}
-                          className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-transform active:scale-125 flex items-center gap-1 border shadow-2xs ${
+                          className={`px-2 py-0.5 rounded-xl text-xs font-bold transition-transform active:scale-125 flex items-center gap-1 border shadow-2xs ${
                             count > 0
                               ? 'bg-white text-slate-900 border-slate-300 shadow-xs'
                               : 'bg-white/60 hover:bg-white text-slate-600 border-slate-200/80'
                           }`}
                         >
                           <span>{emoji}</span>
-                          {count > 0 && <span className="font-mono text-[11px] font-extrabold">{count}</span>}
+                          {count > 0 && <span className="font-mono text-[10px] font-extrabold">{count}</span>}
                         </button>
                       )
                     })}
@@ -299,7 +348,7 @@ export default function GratitudeVaultPage({ showMode }) {
       {/* Give Affirmation Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in">
-          <div className="glass-card max-w-lg w-full p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-2xl bg-white space-y-6 relative max-h-[90vh] overflow-y-auto">
+          <div className="glass-card max-w-lg w-full p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-2xl bg-white space-y-5 relative max-h-[90vh] overflow-y-auto">
             <button
               onClick={() => setIsModalOpen(false)}
               className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 p-1.5 rounded-full hover:bg-slate-100 transition-colors"
@@ -309,7 +358,7 @@ export default function GratitudeVaultPage({ showMode }) {
 
             <div className="space-y-1">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 text-rose-700 text-xs font-bold uppercase tracking-wider">
-                <Sparkles className="w-3.5 h-3.5 text-rose-500" /> Share Kudos
+                <Sparkles className="w-3.5 h-3.5 text-rose-500" /> Share Kudos 🐝 🌻
               </div>
               <h2 className="text-2xl font-black text-slate-900 font-heading">Give an Affirmation ✨</h2>
               <p className="text-xs text-slate-500">Post a warm note of appreciation to inspire your fellow volunteer.</p>
@@ -415,7 +464,7 @@ export default function GratitudeVaultPage({ showMode }) {
         </div>
       )}
 
-      {/* Delete Confirmation Modal (Passcode "X") */}
+      {/* Delete Confirmation Modal */}
       {isDeleteModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in">
           <div className="glass-card max-w-sm w-full p-6 rounded-3xl border border-slate-200 shadow-2xl bg-white space-y-4 text-center relative">
@@ -434,15 +483,15 @@ export default function GratitudeVaultPage({ showMode }) {
             </div>
 
             <div className="space-y-1">
-              <h3 className="text-lg font-black text-slate-900 font-heading">Passcode Protected Action</h3>
+              <h3 className="text-lg font-black text-slate-900 font-heading">Administrative Action</h3>
               <p className="text-xs text-slate-500 leading-relaxed">
-                Deleting an affirmation note requires entering the administrative passcode <code className="bg-slate-100 px-1 py-0.5 rounded font-bold text-slate-700">"X"</code>.
+                Deleting an affirmation note requires entering the administrative passcode.
               </p>
             </div>
 
             <input
-              type="text"
-              placeholder='Enter passcode "X"...'
+              type="password"
+              placeholder="Enter administrative passcode..."
               value={passcode}
               onChange={(e) => setPasscode(e.target.value)}
               className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 text-xs font-bold rounded-xl text-center focus:outline-none focus:border-rose-500"

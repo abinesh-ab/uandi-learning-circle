@@ -1,113 +1,108 @@
-import { useState, useEffect } from 'react'
-import { initialMissions } from '../data/seedData'
-import { teamMembers } from '../data/teamData'
-
-const STORAGE_KEY = 'xfactors_squad_missions'
-
-const CORE_VOLUNTEERS = teamMembers.map((m) => m.name)
+import { useState, useEffect, useCallback } from 'react'
+import {
+  fetchMissions,
+  createMission,
+  broadcastMissionToAll,
+  toggleMissionStatusApi,
+  deleteMissionApi,
+  subscribeToTable,
+} from '../services/api'
+import { isSupabaseConfigured } from '../services/supabaseClient'
 
 export function useSquadMissions() {
-  const [missions, setMissions] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY)
-      return saved ? JSON.parse(saved) : initialMissions
-    } catch {
-      return initialMissions
-    }
-  })
+  const [missions, setMissions] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
 
-  // Sync to localStorage
+  // Load initial missions
+  const loadData = useCallback(async () => {
+    setIsLoading(true)
+    const list = await fetchMissions()
+    setMissions(list)
+    setIsLoading(false)
+  }, [])
+
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(missions))
-    } catch (err) {
-      console.error('Failed to save squad missions state:', err)
+    loadData()
+
+    // Realtime Supabase listener
+    const unsubscribe = subscribeToTable('missions', () => {
+      loadData()
+    })
+
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe()
     }
-  }, [missions])
+  }, [loadData])
 
   // Toggle mission status between 'todo' and 'completed'
-  const toggleMissionStatus = (id) => {
+  const toggleMissionStatus = async (id) => {
+    const target = missions.find((m) => m.id === id)
+    if (!target) return
+
+    const nextStatus = target.status === 'todo' ? 'completed' : 'todo'
     const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+
+    // Optimistic UI update
     setMissions((prev) =>
       prev.map((m) => {
         if (m.id === id) {
-          const nextStatus = m.status === 'todo' ? 'completed' : 'todo'
           return {
             ...m,
             status: nextStatus,
             completedAt: nextStatus === 'completed' ? dateStr : undefined,
           }
         }
-        return m;
+        return m
       })
     )
+
+    await toggleMissionStatusApi(id, nextStatus)
   }
 
   // Add new mission or broadcast to ALL volunteers
-  const addMission = ({ title, category = 'General', volunteer = 'Aravinth', dueDate = 'This Saturday', isBroadcast = false, passcode = '' }) => {
+  const addMission = async ({
+    title,
+    category = 'General',
+    volunteer = 'Aravinth',
+    dueDate = 'This Saturday',
+    isBroadcast = false,
+    passcode = '',
+  }) => {
     if (!title.trim()) return { success: false, error: 'Task title is required.' }
 
     if (isBroadcast) {
       if (passcode !== 'X' && passcode !== 'x') {
-        return { success: false, error: 'Broadcast creation requires Passcode "X".' }
+        return { success: false, error: 'Administrative passcode required for broadcast creation.' }
       }
 
-      const createdDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-
-      const broadcastMissions = CORE_VOLUNTEERS.map((vName, idx) => ({
-        id: `mis-bcast-${Date.now()}-${idx}`,
-        volunteer: vName,
-        title: title.trim(),
-        category,
-        status: 'todo',
-        dueDate,
-        createdAt: createdDate,
-      }))
-
-      setMissions((prev) => [...broadcastMissions, ...prev])
-      return { success: true, count: broadcastMissions.length }
+      await broadcastMissionToAll({ title, category, dueDate })
+      loadData()
+      return { success: true }
     } else {
-      const createdDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-      const newMission = {
-        id: `mis-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-        volunteer,
-        title: title.trim(),
-        category,
-        status: 'todo',
-        dueDate,
-        createdAt: createdDate,
-      }
-      setMissions((prev) => [newMission, ...prev])
-      return { success: true, count: 1 }
+      await createMission({ volunteer, title, category, dueDate })
+      loadData()
+      return { success: true }
     }
   }
 
   // Delete task with passcode guard
-  const deleteMission = (id, passcode) => {
+  const deleteMission = async (id, passcode) => {
     if (passcode !== 'X' && passcode !== 'x') {
-      alert('Invalid passcode. Passcode "X" is required to delete tasks.')
+      alert('Invalid administrative passcode.')
       return false
     }
     setMissions((prev) => prev.filter((m) => m.id !== id))
-    return true
-  }
-
-  // Reset to initial seed data
-  const resetMissionsData = (passcode) => {
-    if (passcode !== 'X' && passcode !== 'x') {
-      alert('Invalid passcode. Passcode "X" is required to reset data.')
-      return false
-    }
-    setMissions(initialMissions)
+    await deleteMissionApi(id)
     return true
   }
 
   return {
     missions,
+    isLoading,
+    isSupabaseConfigured,
     toggleMissionStatus,
     addMission,
     deleteMission,
-    resetMissionsData,
-    setMissions,
+    refetch: loadData,
   }
 }

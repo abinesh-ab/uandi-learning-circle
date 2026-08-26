@@ -1,20 +1,19 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import confetti from 'canvas-confetti'
-import { initialAffirmations } from '../data/seedData'
+import {
+  fetchAffirmations,
+  postAffirmation,
+  reactToAffirmation,
+  deleteAffirmationApi,
+  subscribeToTable,
+} from '../services/api'
+import { isSupabaseConfigured } from '../services/supabaseClient'
 
-const STORAGE_KEY = 'xfactors_gratitude_vault'
 const SENDER_KEY = 'xfactors_saved_sender_name'
 
 export function useGratitudeVault() {
-  const [affirmations, setAffirmations] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY)
-      return saved ? JSON.parse(saved) : initialAffirmations
-    } catch {
-      return initialAffirmations
-    }
-  })
-
+  const [affirmations, setAffirmations] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
   const [savedSender, setSavedSender] = useState(() => {
     try {
       return localStorage.getItem(SENDER_KEY) || ''
@@ -23,20 +22,31 @@ export function useGratitudeVault() {
     }
   })
 
-  // Sync to localStorage
+  // Load initial affirmations
+  const loadData = useCallback(async () => {
+    setIsLoading(true)
+    const list = await fetchAffirmations()
+    setAffirmations(list)
+    setIsLoading(false)
+  }, [])
+
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(affirmations))
-    } catch (err) {
-      console.error('Failed to save gratitude vault state:', err)
+    loadData()
+
+    // Realtime Supabase listener
+    const unsubscribe = subscribeToTable('affirmations', () => {
+      loadData()
+    })
+
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe()
     }
-  }, [affirmations])
+  }, [loadData])
 
   // Add a new affirmation note
-  const addAffirmation = ({ recipient, message, sender, color = 'amber' }) => {
+  const addAffirmation = async ({ recipient, message, sender, color = 'amber' }) => {
     if (!recipient || !message.trim() || !sender.trim()) return false
 
-    // Save sender name for future posts
     try {
       localStorage.setItem(SENDER_KEY, sender.trim())
       setSavedSender(sender.trim())
@@ -44,27 +54,22 @@ export function useGratitudeVault() {
       console.error(e)
     }
 
-    const dateStr = new Date().toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    })
-    const timeStr = new Date().toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-    })
+    // Optimistic UI update
+    const tempId = `temp-${Date.now()}`
+    const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    const timeStr = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
 
-    const newNote = {
-      id: `aff-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+    const tempNote = {
+      id: tempId,
       recipient,
       message: message.trim(),
       sender: sender.trim(),
-      timestamp: `${dateStr} • ${timeStr}`,
-      reactions: { '❤️': 1, '🔥': 0, '👏': 1, '🌟': 0 },
       color,
+      timestamp: `${dateStr} • ${timeStr}`,
+      reactions: { '❤️': 1, '🔥': 0, '👏': 1, '🌟': 0, '🐝': 0, '🌻': 0 },
     }
 
-    setAffirmations((prev) => [newNote, ...prev])
+    setAffirmations((prev) => [tempNote, ...prev])
 
     // Trigger celebratory particle confetti
     confetti({
@@ -74,15 +79,22 @@ export function useGratitudeVault() {
       colors: ['#E11D48', '#2563EB', '#F59E0B', '#10B981', '#8B5CF6'],
     })
 
+    // Post to API (Supabase or LocalStorage)
+    await postAffirmation({ recipient, sender, message, color })
+    loadData()
     return true
   }
 
   // Reaction counter handler
-  const toggleReaction = (id, emoji) => {
+  const toggleReaction = async (id, emoji) => {
+    const target = affirmations.find((a) => a.id === id)
+    const currentReactions = target?.reactions || {}
+
+    // Optimistic UI update
     setAffirmations((prev) =>
       prev.map((item) => {
         if (item.id === id) {
-          const currentCount = item.reactions[emoji] || 0
+          const currentCount = item.reactions?.[emoji] || 0
           return {
             ...item,
             reactions: {
@@ -94,35 +106,30 @@ export function useGratitudeVault() {
         return item
       })
     )
+
+    await reactToAffirmation(id, emoji, currentReactions)
   }
 
   // Delete affirmation with passcode guard
-  const deleteAffirmation = (id, passcode) => {
+  const deleteAffirmation = async (id, passcode) => {
     if (passcode !== 'X' && passcode !== 'x') {
-      alert('Invalid passcode. Passcode "X" is required for administrative deletion.')
+      alert('Invalid administrative passcode.')
       return false
     }
-    setAffirmations((prev) => prev.filter((item) => item.id !== id))
-    return true
-  }
 
-  // Reset to initial seed data
-  const resetVaultData = (passcode) => {
-    if (passcode !== 'X' && passcode !== 'x') {
-      alert('Invalid passcode. Passcode "X" is required to reset data.')
-      return false
-    }
-    setAffirmations(initialAffirmations)
+    setAffirmations((prev) => prev.filter((item) => item.id !== id))
+    await deleteAffirmationApi(id)
     return true
   }
 
   return {
     affirmations,
+    isLoading,
+    isSupabaseConfigured,
     savedSender,
     addAffirmation,
     toggleReaction,
     deleteAffirmation,
-    resetVaultData,
-    setAffirmations,
+    refetch: loadData,
   }
 }

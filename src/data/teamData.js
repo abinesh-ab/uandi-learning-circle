@@ -18,13 +18,13 @@ export const teamMembers = [
     name: 'Sushmitha',
     role: '100% Changemaker',
     focus: 'Foundational Numeracy',
-    desc: 'Brings a calm and quiet presence to the learning space, taking her first steps as a changemaker. Wishing her a beautiful and meaningful journey ahead.',
+    desc: 'Brings a calm and quiet presence to the learning space. Wishing her a beautiful and meaningful journey ahead.',
     avatarColor: 'from-violet-500 to-pink-500',
     avatarText: 'SU',
     photo: getAssetUrl('team/sushmitha.jpeg'),
     specialty: 'Calm & Thoughtful Presence',
     emoji: '🌸',
-},
+  },
   {
     id: 'aruntathi',
     name: 'Aruntathi',
@@ -37,7 +37,6 @@ export const teamMembers = [
     specialty: 'Calm & Prepared Mentorship',
     emoji: '🌱',
   },
-  
   {
     id: 'stanes',
     name: 'Stanes',
@@ -49,8 +48,7 @@ export const teamMembers = [
     photo: getAssetUrl('team/stanes.jpeg'),
     specialty: 'High-Energy & Engaging Mentorship',
     emoji: '⚡',
-},
-
+  },
   {
     id: 'nivashini',
     name: 'Nivashini',
@@ -122,5 +120,17 @@ export const teamMembers = [
     photo: getAssetUrl('team/yogesh.jpeg'),
     specialty: 'Sharp Impact & Focus',
     emoji: '🌟',
+  },
+  {
+    id: 'abinesh',
+    name: 'Abinesh',
+    role: '100% Changemaker & Lead',
+    focus: 'LC Support & Tasks',
+    desc: 'Always ready to support the squad, manage tasks, guide planning, and build possibilities for our children.',
+    avatarColor: 'from-blue-600 to-amber-500',
+    avatarText: 'AB',
+    photo: getAssetUrl('team/abinesh.jpeg'),
+    specialty: 'Squad Support & Lead Mentorship',
+    emoji: '👑',
   },
 ]
