@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react'
-import { CheckSquare, Square, Plus, CheckCircle2, Clock, Lock, X, ChevronDown, ChevronUp, Sparkles, Database, HardDrive } from 'lucide-react'
+import { CheckSquare, Square, Plus, CheckCircle2, Clock, Lock, X, ChevronDown, ChevronUp, Sparkles, Database, HardDrive, Trash2 } from 'lucide-react'
 import { teamMembers } from '../../data/teamData'
 import { useSquadMissions } from '../../hooks/useSquadMissions'
+import AdminDeleteModal from '../common/AdminDeleteModal'
 
 const CATEGORY_COLORS = {
   'Student Log': 'bg-blue-100 text-blue-800 border-blue-200',
@@ -13,9 +14,12 @@ const CATEGORY_COLORS = {
 }
 
 export default function SquadMissionsPage() {
-  const { missions, isLoading, isSupabaseConfigured, toggleMissionStatus, addMission } = useSquadMissions()
+  const { missions, isLoading, isSupabaseConfigured, toggleMissionStatus, addMission, deleteMission } = useSquadMissions()
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [targetDeleteId, setTargetDeleteId] = useState(null)
+  const [targetDeleteTitle, setTargetDeleteTitle] = useState('')
   const [expandedRows, setExpandedRows] = useState({})
 
   // Form State for Adding Missions
@@ -53,6 +57,19 @@ export default function SquadMissionsPage() {
     const percent = total > 0 ? Math.round((completed / total) * 100) : 0
     return { total, completed, percent }
   }, [missions])
+
+  // Delete handlers (Passcode: 'factors')
+  const promptDelete = (id, taskTitle) => {
+    setTargetDeleteId(id)
+    setTargetDeleteTitle(taskTitle)
+    setIsDeleteModalOpen(true)
+  }
+
+  const handleConfirmDelete = async (passcode) => {
+    if (!targetDeleteId) return { error: 'No task selected' }
+    const success = await deleteMission(targetDeleteId, passcode)
+    return { success, error: success ? null : 'Invalid passcode' }
+  }
 
   // Toggle Row Expansion
   const toggleRowExpansion = (name) => {
@@ -283,12 +300,21 @@ export default function SquadMissionsPage() {
                               </div>
                             </div>
 
-                            <button
-                              onClick={() => toggleMissionStatus(task.id)}
-                              className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-600 text-[10px] font-bold transition-colors shrink-0"
-                            >
-                              Done ✓
-                            </button>
+                            <div className="flex items-center gap-1 shrink-0">
+                              <button
+                                onClick={() => toggleMissionStatus(task.id)}
+                                className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-600 text-[10px] font-bold transition-colors"
+                              >
+                                Done ✓
+                              </button>
+                              <button
+                                onClick={() => promptDelete(task.id, task.title)}
+                                className="p-1 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                                title="Delete task (Passcode required)"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -340,12 +366,21 @@ export default function SquadMissionsPage() {
                               </div>
                             </div>
 
-                            <button
-                              onClick={() => toggleMissionStatus(task.id)}
-                              className="text-[10px] font-bold text-emerald-700 hover:underline shrink-0"
-                            >
-                              Undo
-                            </button>
+                            <div className="flex items-center gap-1 shrink-0">
+                              <button
+                                onClick={() => toggleMissionStatus(task.id)}
+                                className="text-[10px] font-bold text-emerald-700 hover:underline"
+                              >
+                                Undo
+                              </button>
+                              <button
+                                onClick={() => promptDelete(task.id, task.title)}
+                                className="p-1 text-emerald-400 hover:text-rose-600 hover:bg-rose-100/50 rounded-lg transition-colors"
+                                title="Delete task (Passcode required)"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -523,6 +558,14 @@ export default function SquadMissionsPage() {
           </div>
         </div>
       )}
+
+      {/* Passcode Protected Delete Modal */}
+      <AdminDeleteModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleConfirmDelete}
+        itemTitle={targetDeleteTitle}
+      />
     </div>
   )
 }

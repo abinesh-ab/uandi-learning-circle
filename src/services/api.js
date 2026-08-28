@@ -1,5 +1,6 @@
 import { supabase, isSupabaseConfigured } from './supabaseClient'
 import { teamMembers } from '../data/teamData'
+import { initialResources } from '../data/resourcesData'
 
 // LocalStorage Keys for Fallback Mode
 const LS_KEYS = {
@@ -7,6 +8,7 @@ const LS_KEYS = {
   MISSIONS: 'xfactors_squad_missions',
   STUDENT_LOGS: 'xfactors_student_logs',
   GENERIC_ENTRIES: 'xfactors_generic_entries',
+  RESOURCES: 'xfactors_resources',
 }
 
 // Helper: Safely get item from LocalStorage
@@ -413,7 +415,91 @@ export async function submitEntry(moduleType, authorName, payload) {
 }
 
 // ============================================================================
-// 6. REAL-TIME SUBSCRIPTION HELPER
+// 6. RESOURCES API (Resource Hub Table & Library)
+// ============================================================================
+export async function fetchResources() {
+  if (!isSupabaseConfigured) {
+    const local = getLocal(LS_KEYS.RESOURCES, null)
+    if (!local || local.length === 0) {
+      setLocal(LS_KEYS.RESOURCES, initialResources)
+      return initialResources
+    }
+    return local
+  }
+  try {
+    const { data, error } = await supabase.from('resources').select('*').order('created_at', { ascending: false })
+    if (error) throw error
+    if (!data || data.length === 0) {
+      // Fallback or empty list
+      return getLocal(LS_KEYS.RESOURCES, initialResources)
+    }
+    return data
+  } catch (err) {
+    console.error('Error fetching resources from Supabase:', err)
+    return getLocal(LS_KEYS.RESOURCES, initialResources)
+  }
+}
+
+export async function postResource({ title, category, grade = 'General', description = '', file_url, file_type = 'PDF' }) {
+  const newRes = {
+    id: `res-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+    title: title.trim(),
+    category: category.trim(),
+    grade: grade.trim(),
+    description: description.trim(),
+    file_url: file_url.trim(),
+    file_type: (file_type || 'PDF').toUpperCase().trim(),
+    created_at: new Date().toISOString(),
+  }
+
+  const localList = getLocal(LS_KEYS.RESOURCES, initialResources)
+  setLocal(LS_KEYS.RESOURCES, [newRes, ...localList])
+
+  if (!isSupabaseConfigured) return newRes
+
+  try {
+    const { data, error } = await supabase
+      .from('resources')
+      .insert({
+        title: title.trim(),
+        category: category.trim(),
+        grade: grade.trim(),
+        description: description.trim(),
+        file_url: file_url.trim(),
+        file_type: (file_type || 'PDF').toUpperCase().trim(),
+      })
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  } catch (err) {
+    console.error('Error inserting resource to Supabase:', err)
+    return newRes
+  }
+}
+
+export async function deleteResourceApi(id) {
+  const localList = getLocal(LS_KEYS.RESOURCES, initialResources)
+  setLocal(
+    LS_KEYS.RESOURCES,
+    localList.filter((item) => item.id !== id)
+  )
+
+  if (!isSupabaseConfigured) return true
+
+  try {
+    const { error } = await supabase.from('resources').delete().eq('id', id)
+    if (error) throw error
+    return true
+  } catch (err) {
+    console.error('Error deleting resource from Supabase:', err)
+    return true
+  }
+}
+
+// ============================================================================
+// 7. REAL-TIME SUBSCRIPTION HELPER
 // ============================================================================
 export function subscribeToTable(tableName, onChangeCallback) {
   if (!isSupabaseConfigured || !supabase) return () => {}

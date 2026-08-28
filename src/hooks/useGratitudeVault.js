@@ -110,10 +110,10 @@ export function useGratitudeVault() {
     await reactToAffirmation(id, emoji, currentReactions)
   }
 
-  // Delete affirmation with passcode guard
+  // Delete affirmation with passcode guard (Passcode: 'factors')
   const deleteAffirmation = async (id, passcode) => {
-    if (passcode !== 'X' && passcode !== 'x') {
-      alert('Invalid administrative passcode.')
+    const cleanPass = (passcode || '').trim().toLowerCase()
+    if (cleanPass !== 'factors') {
       return false
     }
 

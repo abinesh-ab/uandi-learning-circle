@@ -85,10 +85,10 @@ export function useSquadMissions() {
     }
   }
 
-  // Delete task with passcode guard
+  // Delete task with passcode guard (Passcode: 'factors')
   const deleteMission = async (id, passcode) => {
-    if (passcode !== 'X' && passcode !== 'x') {
-      alert('Invalid administrative passcode.')
+    const cleanPass = (passcode || '').trim().toLowerCase()
+    if (cleanPass !== 'factors') {
       return false
     }
     setMissions((prev) => prev.filter((m) => m.id !== id))

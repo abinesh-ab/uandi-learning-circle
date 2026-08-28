@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { Heart, Sparkles, Plus, Trash2, Send, X, Lock, Filter, Check, Database, HardDrive } from 'lucide-react'
 import { teamMembers } from '../../data/teamData'
 import { useGratitudeVault } from '../../hooks/useGratitudeVault'
+import AdminDeleteModal from '../common/AdminDeleteModal'
 
 const COLOR_MAP = {
   amber: {
@@ -98,15 +99,11 @@ export default function GratitudeVaultPage({ showMode }) {
     }
   }
 
-  // Handle Delete Confirmation
-  const confirmDelete = () => {
-    if (!targetDeleteId) return
-    const success = deleteAffirmation(targetDeleteId, passcode)
-    if (success) {
-      setIsDeleteModalOpen(false)
-      setTargetDeleteId(null)
-      setPasscode('')
-    }
+  // Handle Delete Confirmation (Passcode: 'factors')
+  const confirmDelete = async (passcode) => {
+    if (!targetDeleteId) return { error: 'No note selected' }
+    const success = await deleteAffirmation(targetDeleteId, passcode)
+    return { success, error: success ? null : 'Invalid passcode' }
   }
 
   return (
@@ -464,59 +461,12 @@ export default function GratitudeVaultPage({ showMode }) {
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
-      {isDeleteModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in">
-          <div className="glass-card max-w-sm w-full p-6 rounded-3xl border border-slate-200 shadow-2xl bg-white space-y-4 text-center relative">
-            <button
-              onClick={() => {
-                setIsDeleteModalOpen(false)
-                setPasscode('')
-              }}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 p-1.5 rounded-full hover:bg-slate-100"
-            >
-              <X className="w-4 h-4" />
-            </button>
-
-            <div className="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto text-xl">
-              <Lock className="w-6 h-6" />
-            </div>
-
-            <div className="space-y-1">
-              <h3 className="text-lg font-black text-slate-900 font-heading">Administrative Action</h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Deleting an affirmation note requires entering the administrative passcode.
-              </p>
-            </div>
-
-            <input
-              type="password"
-              placeholder="Enter administrative passcode..."
-              value={passcode}
-              onChange={(e) => setPasscode(e.target.value)}
-              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 text-xs font-bold rounded-xl text-center focus:outline-none focus:border-rose-500"
-            />
-
-            <div className="flex gap-2 pt-1">
-              <button
-                onClick={() => {
-                  setIsDeleteModalOpen(false)
-                  setPasscode('')
-                }}
-                className="w-1/2 py-2.5 bg-slate-100 text-slate-700 text-xs font-bold rounded-xl"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDelete}
-                className="w-1/2 py-2.5 bg-rose-600 text-white text-xs font-bold rounded-xl shadow-md"
-              >
-                Delete Note
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Passcode Protected Delete Modal */}
+      <AdminDeleteModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={confirmDelete}
+      />
     </div>
   )
 }
