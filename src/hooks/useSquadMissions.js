@@ -89,11 +89,12 @@ export function useSquadMissions() {
   const deleteMission = async (id, passcode) => {
     const cleanPass = (passcode || '').trim().toLowerCase()
     if (cleanPass !== 'factors') {
-      return false
+      return { success: false, error: 'Invalid passcode' }
     }
+    const target = missions.find((m) => m.id === id)
     setMissions((prev) => prev.filter((m) => m.id !== id))
     await deleteMissionApi(id)
-    return true
+    return { success: true, deletedMission: target }
   }
 
   return {

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import {
   BookOpen,
   Search,
@@ -11,6 +11,8 @@ import {
   File,
   Database,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react'
 import { resourceCategories } from '../../data/resourcesData'
 import { useResources } from '../../hooks/useResources'
@@ -39,6 +41,10 @@ export default function ResourcesPage() {
 
   const [activeCategory, setActiveCategory] = useState('All')
   const [searchQuery, setSearchQuery] = useState('')
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
 
   // Modals state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
@@ -69,6 +75,20 @@ export default function ResourcesPage() {
       return matchCat && matchSearch
     })
   }, [resources, activeCategory, searchQuery])
+
+  // Reset to page 1 on filter or search change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [activeCategory, searchQuery])
+
+  // Paginated resources
+  const totalPages = Math.max(1, Math.ceil(filteredResources.length / itemsPerPage))
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = Math.min(startIndex + itemsPerPage, filteredResources.length)
+
+  const paginatedResources = useMemo(() => {
+    return filteredResources.slice(startIndex, startIndex + itemsPerPage)
+  }, [filteredResources, startIndex, itemsPerPage])
 
   // Handle Add Resource
   const handleAddSubmit = async (payload) => {
@@ -243,7 +263,7 @@ export default function ResourcesPage() {
                   </td>
                 </tr>
               ) : (
-                filteredResources.map((res) => {
+                paginatedResources.map((res) => {
                   const badgeStyle = FILE_TYPE_BADGES[res.file_type] || FILE_TYPE_BADGES.PDF
                   const catStyle = CATEGORY_COLORS[res.category] || CATEGORY_COLORS.General
 
@@ -329,6 +349,59 @@ export default function ResourcesPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Compact Table Pagination Footer */}
+        {filteredResources.length > 0 && (
+          <div className="p-4 border-t border-slate-200 bg-slate-50/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-medium text-slate-600">
+            <div>
+              Showing <span className="font-bold text-slate-900">{startIndex + 1}</span> to{' '}
+              <span className="font-bold text-slate-900">{endIndex}</span> of{' '}
+              <span className="font-bold text-slate-900">{filteredResources.length}</span> resources
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-4">
+              {/* Page Controls */}
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:hover:bg-white font-bold transition-colors flex items-center gap-1 shadow-2xs"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  <span>Prev</span>
+                </button>
+                <span className="px-3 font-bold text-slate-900">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage >= totalPages}
+                  className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:hover:bg-white font-bold transition-colors flex items-center gap-1 shadow-2xs"
+                >
+                  <span>Next</span>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Items Per Page Selector */}
+              <div className="flex items-center gap-1.5">
+                <span className="text-slate-500 font-medium">Per page:</span>
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => {
+                    setItemsPerPage(Number(e.target.value))
+                    setCurrentPage(1)
+                  }}
+                  className="px-2.5 py-1 bg-white border border-slate-200 text-slate-900 font-bold rounded-xl focus:outline-none focus:border-brand-blue cursor-pointer shadow-2xs"
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Creation Modal */}

@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
-import { CheckSquare, Square, Plus, CheckCircle2, Clock, Lock, X, ChevronDown, ChevronUp, Sparkles, Database, HardDrive, Trash2 } from 'lucide-react'
+import confetti from 'canvas-confetti'
+import { CheckSquare, Square, Plus, CheckCircle2, Clock, Lock, X, ChevronDown, ChevronUp, Sparkles, Database, HardDrive, Trash2, Filter } from 'lucide-react'
 import { teamMembers } from '../../data/teamData'
 import { useSquadMissions } from '../../hooks/useSquadMissions'
 import AdminDeleteModal from '../common/AdminDeleteModal'
@@ -22,6 +23,9 @@ export default function SquadMissionsPage() {
   const [targetDeleteTitle, setTargetDeleteTitle] = useState('')
   const [expandedRows, setExpandedRows] = useState({})
 
+  // Volunteer Filter State ('ALL' | volunteer name)
+  const [selectedVolunteerFilter, setSelectedVolunteerFilter] = useState('ALL')
+
   // Form State for Adding Missions
   const [title, setTitle] = useState('')
   const [category, setCategory] = useState('Student Log')
@@ -31,14 +35,14 @@ export default function SquadMissionsPage() {
   const [passcode, setPasscode] = useState('')
   const [formError, setFormError] = useState('')
 
-  // Calculate stats per volunteer
+  // Calculate stats per volunteer (Handles 0 tasks gracefully as 100% / All caught up!)
   const volunteerStats = useMemo(() => {
     const stats = {}
     teamMembers.forEach((member) => {
       const vMissions = missions.filter((m) => m.volunteer === member.name)
       const completed = vMissions.filter((m) => m.status === 'completed').length
       const total = vMissions.length
-      const percent = total > 0 ? Math.round((completed / total) * 100) : 0
+      const percent = total > 0 ? Math.round((completed / total) * 100) : 100
       stats[member.name] = {
         total,
         completed,
@@ -50,13 +54,35 @@ export default function SquadMissionsPage() {
     return stats
   }, [missions])
 
-  // Overall Board Completion Rate
-  const overallStats = useMemo(() => {
-    const total = missions.length
-    const completed = missions.filter((m) => m.status === 'completed').length
-    const percent = total > 0 ? Math.round((completed / total) * 100) : 0
-    return { total, completed, percent }
-  }, [missions])
+  // Header Progress display (Dynamic based on selected volunteer filter)
+  const headerProgressStats = useMemo(() => {
+    if (selectedVolunteerFilter !== 'ALL') {
+      const stats = volunteerStats[selectedVolunteerFilter] || { total: 0, completed: 0, percent: 100 }
+      return {
+        title: `${selectedVolunteerFilter}'s Progress`,
+        completed: stats.completed,
+        total: stats.total,
+        percent: stats.percent,
+        isFiltered: true,
+      }
+    }
+    const grandTotal = missions.length
+    const grandCompleted = missions.filter((m) => m.status === 'completed').length
+    const overallPercent = grandTotal > 0 ? Math.round((grandCompleted / grandTotal) * 100) : 100
+    return {
+      title: 'Squad Progress',
+      completed: grandCompleted,
+      total: grandTotal,
+      percent: overallPercent,
+      isFiltered: false,
+    }
+  }, [missions, selectedVolunteerFilter, volunteerStats])
+
+  // Filtered members list to display
+  const displayedMembers = useMemo(() => {
+    if (selectedVolunteerFilter === 'ALL') return teamMembers
+    return teamMembers.filter((m) => m.name === selectedVolunteerFilter)
+  }, [selectedVolunteerFilter])
 
   // Delete handlers (Passcode: 'factors')
   const promptDelete = (id, taskTitle) => {
@@ -67,8 +93,17 @@ export default function SquadMissionsPage() {
 
   const handleConfirmDelete = async (passcode) => {
     if (!targetDeleteId) return { error: 'No task selected' }
-    const success = await deleteMission(targetDeleteId, passcode)
-    return { success, error: success ? null : 'Invalid passcode' }
+    const res = await deleteMission(targetDeleteId, passcode)
+    if (res && res.success && res.deletedMission) {
+      const vName = res.deletedMission.volunteer
+      const remainingVMissions = missions.filter((m) => m.volunteer === vName && m.id !== targetDeleteId)
+      const remainingTodo = remainingVMissions.filter((m) => m.status === 'todo').length
+      // Trigger confetti if deleting an obsolete pending task brings volunteer to 100% completion
+      if (remainingTodo === 0 && res.deletedMission.status === 'todo') {
+        confetti({ particleCount: 90, spread: 80, origin: { y: 0.6 } })
+      }
+    }
+    return res
   }
 
   // Toggle Row Expansion
@@ -143,18 +178,48 @@ export default function SquadMissionsPage() {
           </p>
         </div>
 
-        {/* Board Overall Progress Badge & Add Action Button */}
-        <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
+        {/* Board Progress Badge, Volunteer Dropdown Filter & Add Action Button */}
+        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-between md:justify-end">
+          {/* Progress Badge */}
           <div className="glass-card px-4 py-2 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3 bg-white">
             <div>
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Squad Progress</span>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">
+                {headerProgressStats.title}
+              </span>
               <span className="text-xs sm:text-sm font-black text-slate-900 font-heading">
-                {overallStats.completed}/{overallStats.total} Done ({overallStats.percent}%)
+                {headerProgressStats.completed}/{headerProgressStats.total} Done ({headerProgressStats.percent}%)
               </span>
             </div>
-            <div className="w-9 h-9 rounded-full bg-emerald-50 text-emerald-600 font-extrabold text-xs flex items-center justify-center border border-emerald-200">
-              {overallStats.percent}%
+            <div className="w-9 h-9 rounded-full bg-emerald-50 text-emerald-600 font-extrabold text-xs flex items-center justify-center border border-emerald-200 shrink-0">
+              {headerProgressStats.percent}%
             </div>
+          </div>
+
+          {/* Single Volunteer Dropdown Selector */}
+          <div className="flex items-center gap-2">
+            <select
+              value={selectedVolunteerFilter}
+              onChange={(e) => setSelectedVolunteerFilter(e.target.value)}
+              className="px-3.5 py-2.5 bg-white border border-slate-200 text-slate-900 font-bold text-xs rounded-2xl shadow-sm focus:outline-none focus:border-brand-blue cursor-pointer"
+            >
+              <option value="ALL">🌟 All Volunteers ({teamMembers.length})</option>
+              {teamMembers.map((m) => (
+                <option key={m.id} value={m.name}>
+                  {m.name} ({m.focus})
+                </option>
+              ))}
+            </select>
+
+            {selectedVolunteerFilter !== 'ALL' && (
+              <button
+                onClick={() => setSelectedVolunteerFilter('ALL')}
+                className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-2xl transition-colors shrink-0 flex items-center gap-1"
+                title="Reset to view all volunteers"
+              >
+                <span>Clear Filter</span>
+                <span>✕</span>
+              </button>
+            )}
           </div>
 
           <button
@@ -179,7 +244,7 @@ export default function SquadMissionsPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {teamMembers.map((member) => {
+          {displayedMembers.map((member) => {
             const stats = volunteerStats[member.name] || { total: 0, completed: 0, todo: 0, percent: 0, missions: [] }
             const todoTasks = stats.missions.filter((m) => m.status === 'todo')
             const completedTasks = stats.missions.filter((m) => m.status === 'completed')
@@ -233,7 +298,7 @@ export default function SquadMissionsPage() {
                       <div className="flex justify-between items-center text-[10px] font-bold">
                         <span className="text-slate-500">Row Completion</span>
                         <span className={stats.percent === 100 ? 'text-emerald-600 font-black' : 'text-slate-900'}>
-                          {stats.completed}/{stats.total} Done ({stats.percent}%)
+                          {stats.total === 0 ? '100% (All caught up!)' : `${stats.completed}/${stats.total} Done (${stats.percent}%)`}
                         </span>
                       </div>
                       <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden border border-slate-200/80">

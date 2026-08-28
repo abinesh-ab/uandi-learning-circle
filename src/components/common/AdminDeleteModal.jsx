@@ -43,7 +43,7 @@ export default function AdminDeleteModal({ isOpen, onClose, onConfirm, itemTitle
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in">
       <div
-        className={`bg-white rounded-3xl border border-slate-200 shadow-2xl p-6 sm:p-8 max-w-sm w-full space-y-5 text-center relative transition-transform ${
+        className={`bg-white rounded-3xl border border-slate-200 shadow-2xl p-6 sm:p-8 max-w-sm w-full max-h-[90vh] overflow-y-auto space-y-5 text-center relative transition-transform ${
           isShaking ? 'animate-shake' : ''
         }`}
       >
