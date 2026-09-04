@@ -2,13 +2,13 @@ import { supabase, isSupabaseConfigured } from './supabaseClient'
 import { teamMembers } from '../data/teamData'
 import { initialResources } from '../data/resourcesData'
 
-// LocalStorage Keys for Fallback Mode
+// LocalStorage Keys for Fallback Mode — keyed per LC
 const LS_KEYS = {
-  AFFIRMATIONS: 'xfactors_gratitude_vault',
-  MISSIONS: 'xfactors_squad_missions',
+  AFFIRMATIONS: (lc = 'the-x-factors') => `${lc}_gratitude_vault`,
+  MISSIONS:     (lc = 'the-x-factors') => `${lc}_squad_missions`,
+  RESOURCES:    (lc = 'the-x-factors') => `${lc}_resources`,
   STUDENT_LOGS: 'xfactors_student_logs',
   GENERIC_ENTRIES: 'xfactors_generic_entries',
-  RESOURCES: 'xfactors_resources',
 }
 
 // Helper: Safely get item from LocalStorage
@@ -48,17 +48,20 @@ export async function getVolunteers() {
 }
 
 // ============================================================================
-// 2. AFFIRMATIONS API (The Gratitude Vault)
+// 2. AFFIRMATIONS API (The Gratitude Vault) — LC filtered
 // ============================================================================
-export async function fetchAffirmations() {
+export async function fetchAffirmations(lcName = 'the-x-factors') {
   if (!isSupabaseConfigured) {
-    return getLocal(LS_KEYS.AFFIRMATIONS, [])
+    return getLocal(LS_KEYS.AFFIRMATIONS(lcName), [])
   }
   try {
-    const { data, error } = await supabase.from('affirmations').select('*').order('created_at', { ascending: false })
+    const { data, error } = await supabase
+      .from('affirmations')
+      .select('*')
+      .eq('lc_name', lcName)
+      .order('created_at', { ascending: false })
     if (error) throw error
-    
-    // Map database column names to component expected structure
+
     const mapped = (data || []).map((row) => ({
       id: row.id,
       recipient: row.recipient_name,
@@ -76,11 +79,11 @@ export async function fetchAffirmations() {
     return mapped
   } catch (err) {
     console.error('Error fetching affirmations from Supabase, falling back to LocalStorage:', err)
-    return getLocal(LS_KEYS.AFFIRMATIONS, [])
+    return getLocal(LS_KEYS.AFFIRMATIONS(lcName), [])
   }
 }
 
-export async function postAffirmation({ recipient, sender, message, color = 'amber' }) {
+export async function postAffirmation({ recipient, sender, message, color = 'amber', lcName = 'the-x-factors' }) {
   const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
   const timeStr = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
 
@@ -93,11 +96,11 @@ export async function postAffirmation({ recipient, sender, message, color = 'amb
     reactions: { '❤️': 1, '🔥': 0, '👏': 1, '🌟': 0, '🐝': 0, '🌻': 0 },
     timestamp: `${dateStr} • ${timeStr}`,
     created_at: new Date().toISOString(),
+    lc_name: lcName,
   }
 
-  // Always sync to LocalStorage as fallback
-  const localList = getLocal(LS_KEYS.AFFIRMATIONS, [])
-  setLocal(LS_KEYS.AFFIRMATIONS, [newAff, ...localList])
+  const localList = getLocal(LS_KEYS.AFFIRMATIONS(lcName), [])
+  setLocal(LS_KEYS.AFFIRMATIONS(lcName), [newAff, ...localList])
 
   if (!isSupabaseConfigured) return newAff
 
@@ -110,6 +113,7 @@ export async function postAffirmation({ recipient, sender, message, color = 'amb
         message: message.trim(),
         color,
         reactions: newAff.reactions,
+        lc_name: lcName,
       })
       .select()
       .single()
@@ -128,12 +132,17 @@ export async function reactToAffirmation(id, emoji, currentReactions = {}) {
     [emoji]: (currentReactions[emoji] || 0) + 1,
   }
 
-  // LocalStorage sync
-  const localList = getLocal(LS_KEYS.AFFIRMATIONS, [])
-  const updatedLocal = localList.map((item) => (item.id === id ? { ...item, reactions: updatedReactions } : item))
-  setLocal(LS_KEYS.AFFIRMATIONS, updatedLocal)
-
-  if (!isSupabaseConfigured) return true
+  if (!isSupabaseConfigured) {
+    // Best-effort update across all LC local keys
+    ;['the-x-factors', 'majaraam', 'kanakkukaanumkovai'].forEach((lc) => {
+      const localList = getLocal(LS_KEYS.AFFIRMATIONS(lc), [])
+      if (localList.some((item) => item.id === id)) {
+        const updated = localList.map((item) => (item.id === id ? { ...item, reactions: updatedReactions } : item))
+        setLocal(LS_KEYS.AFFIRMATIONS(lc), updated)
+      }
+    })
+    return true
+  }
 
   try {
     const { error } = await supabase
@@ -150,11 +159,11 @@ export async function reactToAffirmation(id, emoji, currentReactions = {}) {
 }
 
 export async function deleteAffirmationApi(id) {
-  const localList = getLocal(LS_KEYS.AFFIRMATIONS, [])
-  setLocal(
-    LS_KEYS.AFFIRMATIONS,
-    localList.filter((item) => item.id !== id)
-  )
+  // Remove from all LC local storage
+  ;['the-x-factors', 'majaraam', 'kanakkukaanumkovai'].forEach((lc) => {
+    const localList = getLocal(LS_KEYS.AFFIRMATIONS(lc), [])
+    setLocal(LS_KEYS.AFFIRMATIONS(lc), localList.filter((item) => item.id !== id))
+  })
 
   if (!isSupabaseConfigured) return true
 
@@ -169,14 +178,18 @@ export async function deleteAffirmationApi(id) {
 }
 
 // ============================================================================
-// 3. MISSIONS API (Squad Missions / Action Tracker)
+// 3. MISSIONS API (Squad Missions / Action Tracker) — LC filtered
 // ============================================================================
-export async function fetchMissions() {
+export async function fetchMissions(lcName = 'the-x-factors') {
   if (!isSupabaseConfigured) {
-    return getLocal(LS_KEYS.MISSIONS, [])
+    return getLocal(LS_KEYS.MISSIONS(lcName), [])
   }
   try {
-    const { data, error } = await supabase.from('missions').select('*').order('created_at', { ascending: false })
+    const { data, error } = await supabase
+      .from('missions')
+      .select('*')
+      .eq('lc_name', lcName)
+      .order('created_at', { ascending: false })
     if (error) throw error
 
     const mapped = (data || []).map((row) => ({
@@ -194,11 +207,11 @@ export async function fetchMissions() {
     return mapped
   } catch (err) {
     console.error('Error fetching missions from Supabase, falling back to LocalStorage:', err)
-    return getLocal(LS_KEYS.MISSIONS, [])
+    return getLocal(LS_KEYS.MISSIONS(lcName), [])
   }
 }
 
-export async function createMission({ volunteer, title, category = 'General', dueDate = 'This Saturday' }) {
+export async function createMission({ volunteer, title, category = 'General', dueDate = 'This Saturday', lcName = 'the-x-factors' }) {
   const createdDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
   const newMission = {
     id: `mis-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
@@ -208,10 +221,11 @@ export async function createMission({ volunteer, title, category = 'General', du
     status: 'todo',
     dueDate,
     createdAt: createdDate,
+    lc_name: lcName,
   }
 
-  const localList = getLocal(LS_KEYS.MISSIONS, [])
-  setLocal(LS_KEYS.MISSIONS, [newMission, ...localList])
+  const localList = getLocal(LS_KEYS.MISSIONS(lcName), [])
+  setLocal(LS_KEYS.MISSIONS(lcName), [newMission, ...localList])
 
   if (!isSupabaseConfigured) return newMission
 
@@ -224,6 +238,7 @@ export async function createMission({ volunteer, title, category = 'General', du
         category,
         status: 'todo',
         due_date: dueDate,
+        lc_name: lcName,
       })
       .select()
       .single()
@@ -236,9 +251,10 @@ export async function createMission({ volunteer, title, category = 'General', du
   }
 }
 
-export async function broadcastMissionToAll({ title, category = 'General', dueDate = 'This Saturday' }) {
+export async function broadcastMissionToAll({ title, category = 'General', dueDate = 'This Saturday', lcName = 'the-x-factors', lcVolunteers }) {
   const createdDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-  const volunteers = teamMembers.map((m) => m.name)
+  // lcVolunteers is passed from the hook so it only broadcasts within the active LC's team
+  const volunteers = lcVolunteers || teamMembers.map((m) => m.name)
 
   const broadcastList = volunteers.map((vName, idx) => ({
     id: `mis-bcast-${Date.now()}-${idx}`,
@@ -248,10 +264,11 @@ export async function broadcastMissionToAll({ title, category = 'General', dueDa
     status: 'todo',
     dueDate,
     createdAt: createdDate,
+    lc_name: lcName,
   }))
 
-  const localList = getLocal(LS_KEYS.MISSIONS, [])
-  setLocal(LS_KEYS.MISSIONS, [...broadcastList, ...localList])
+  const localList = getLocal(LS_KEYS.MISSIONS(lcName), [])
+  setLocal(LS_KEYS.MISSIONS(lcName), [...broadcastList, ...localList])
 
   if (!isSupabaseConfigured) return broadcastList
 
@@ -262,6 +279,7 @@ export async function broadcastMissionToAll({ title, category = 'General', dueDa
       category,
       status: 'todo',
       due_date: dueDate,
+      lc_name: lcName,
     }))
 
     const { data, error } = await supabase.from('missions').insert(insertPayload).select()
@@ -415,32 +433,39 @@ export async function submitEntry(moduleType, authorName, payload) {
 }
 
 // ============================================================================
-// 6. RESOURCES API (Resource Hub Table & Library)
+// 6. RESOURCES API (Resource Hub Table & Library) — LC filtered
 // ============================================================================
-export async function fetchResources() {
+export async function fetchResources(lcName = 'the-x-factors') {
   if (!isSupabaseConfigured) {
-    const local = getLocal(LS_KEYS.RESOURCES, null)
+    const local = getLocal(LS_KEYS.RESOURCES(lcName), null)
     if (!local || local.length === 0) {
-      setLocal(LS_KEYS.RESOURCES, initialResources)
-      return initialResources
+      // Seed initial resources only for X Factors
+      if (lcName === 'the-x-factors') {
+        setLocal(LS_KEYS.RESOURCES(lcName), initialResources)
+        return initialResources
+      }
+      return []
     }
     return local
   }
   try {
-    const { data, error } = await supabase.from('resources').select('*').order('created_at', { ascending: false })
+    const { data, error } = await supabase
+      .from('resources')
+      .select('*')
+      .eq('lc_name', lcName)
+      .order('created_at', { ascending: false })
     if (error) throw error
     if (!data || data.length === 0) {
-      // Fallback or empty list
-      return getLocal(LS_KEYS.RESOURCES, initialResources)
+      return getLocal(LS_KEYS.RESOURCES(lcName), lcName === 'the-x-factors' ? initialResources : [])
     }
     return data
   } catch (err) {
     console.error('Error fetching resources from Supabase:', err)
-    return getLocal(LS_KEYS.RESOURCES, initialResources)
+    return getLocal(LS_KEYS.RESOURCES(lcName), lcName === 'the-x-factors' ? initialResources : [])
   }
 }
 
-export async function postResource({ title, category, grade = 'General', description = '', file_url, file_type = 'PDF' }) {
+export async function postResource({ title, category, grade = 'General', description = '', file_url, file_type = 'PDF', lcName = 'the-x-factors' }) {
   const newRes = {
     id: `res-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
     title: title.trim(),
@@ -450,10 +475,11 @@ export async function postResource({ title, category, grade = 'General', descrip
     file_url: file_url.trim(),
     file_type: (file_type || 'PDF').toUpperCase().trim(),
     created_at: new Date().toISOString(),
+    lc_name: lcName,
   }
 
-  const localList = getLocal(LS_KEYS.RESOURCES, initialResources)
-  setLocal(LS_KEYS.RESOURCES, [newRes, ...localList])
+  const localList = getLocal(LS_KEYS.RESOURCES(lcName), lcName === 'the-x-factors' ? initialResources : [])
+  setLocal(LS_KEYS.RESOURCES(lcName), [newRes, ...localList])
 
   if (!isSupabaseConfigured) return newRes
 
@@ -467,6 +493,7 @@ export async function postResource({ title, category, grade = 'General', descrip
         description: description.trim(),
         file_url: file_url.trim(),
         file_type: (file_type || 'PDF').toUpperCase().trim(),
+        lc_name: lcName,
       })
       .select()
       .single()
@@ -479,10 +506,10 @@ export async function postResource({ title, category, grade = 'General', descrip
   }
 }
 
-export async function deleteResourceApi(id) {
-  const localList = getLocal(LS_KEYS.RESOURCES, initialResources)
+export async function deleteResourceApi(id, lcName = 'the-x-factors') {
+  const localList = getLocal(LS_KEYS.RESOURCES(lcName), lcName === 'the-x-factors' ? initialResources : [])
   setLocal(
-    LS_KEYS.RESOURCES,
+    LS_KEYS.RESOURCES(lcName),
     localList.filter((item) => item.id !== id)
   )
 

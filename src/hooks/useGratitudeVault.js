@@ -11,7 +11,7 @@ import { isSupabaseConfigured } from '../services/supabaseClient'
 
 const SENDER_KEY = 'xfactors_saved_sender_name'
 
-export function useGratitudeVault() {
+export function useGratitudeVault(lcName = 'the-x-factors') {
   const [affirmations, setAffirmations] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [savedSender, setSavedSender] = useState(() => {
@@ -22,18 +22,16 @@ export function useGratitudeVault() {
     }
   })
 
-  // Load initial affirmations
   const loadData = useCallback(async () => {
     setIsLoading(true)
-    const list = await fetchAffirmations()
+    const list = await fetchAffirmations(lcName)
     setAffirmations(list)
     setIsLoading(false)
-  }, [])
+  }, [lcName])
 
   useEffect(() => {
     loadData()
 
-    // Realtime Supabase listener
     const unsubscribe = subscribeToTable('affirmations', () => {
       loadData()
     })
@@ -43,7 +41,6 @@ export function useGratitudeVault() {
     }
   }, [loadData])
 
-  // Add a new affirmation note
   const addAffirmation = async ({ recipient, message, sender, color = 'amber' }) => {
     if (!recipient || !message.trim() || !sender.trim()) return false
 
@@ -54,7 +51,6 @@ export function useGratitudeVault() {
       console.error(e)
     }
 
-    // Optimistic UI update
     const tempId = `temp-${Date.now()}`
     const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     const timeStr = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
@@ -67,11 +63,11 @@ export function useGratitudeVault() {
       color,
       timestamp: `${dateStr} • ${timeStr}`,
       reactions: { '❤️': 1, '🔥': 0, '👏': 1, '🌟': 0, '🐝': 0, '🌻': 0 },
+      lc_name: lcName,
     }
 
     setAffirmations((prev) => [tempNote, ...prev])
 
-    // Trigger celebratory particle confetti
     confetti({
       particleCount: 100,
       spread: 70,
@@ -79,18 +75,15 @@ export function useGratitudeVault() {
       colors: ['#E11D48', '#2563EB', '#F59E0B', '#10B981', '#8B5CF6'],
     })
 
-    // Post to API (Supabase or LocalStorage)
-    await postAffirmation({ recipient, sender, message, color })
+    await postAffirmation({ recipient, sender, message, color, lcName })
     loadData()
     return true
   }
 
-  // Reaction counter handler
   const toggleReaction = async (id, emoji) => {
     const target = affirmations.find((a) => a.id === id)
     const currentReactions = target?.reactions || {}
 
-    // Optimistic UI update
     setAffirmations((prev) =>
       prev.map((item) => {
         if (item.id === id) {
@@ -110,7 +103,7 @@ export function useGratitudeVault() {
     await reactToAffirmation(id, emoji, currentReactions)
   }
 
-  // Delete affirmation with passcode guard (Passcode: 'factors')
+  // Delete affirmation — Passcode 'factors'
   const deleteAffirmation = async (id, passcode) => {
     const cleanPass = (passcode || '').trim().toLowerCase()
     if (cleanPass !== 'factors') {

@@ -36,8 +36,8 @@ const CATEGORY_COLORS = {
   General: 'bg-slate-100 text-slate-800 border-slate-200',
 }
 
-export default function ResourcesPage() {
-  const { resources, isLoading, isSupabaseConfigured, addResource, deleteResource } = useResources()
+export default function ResourcesPage({ activeLc = 'the-x-factors' }) {
+  const { resources, isLoading, isSupabaseConfigured, addResource, deleteResource } = useResources(activeLc)
 
   const [activeCategory, setActiveCategory] = useState('All')
   const [searchQuery, setSearchQuery] = useState('')

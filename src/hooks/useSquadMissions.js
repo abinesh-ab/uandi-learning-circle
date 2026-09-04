@@ -8,23 +8,22 @@ import {
   subscribeToTable,
 } from '../services/api'
 import { isSupabaseConfigured } from '../services/supabaseClient'
+import { lcTeams } from '../data/teamData'
 
-export function useSquadMissions() {
+export function useSquadMissions(lcName = 'the-x-factors') {
   const [missions, setMissions] = useState([])
   const [isLoading, setIsLoading] = useState(true)
 
-  // Load initial missions
   const loadData = useCallback(async () => {
     setIsLoading(true)
-    const list = await fetchMissions()
+    const list = await fetchMissions(lcName)
     setMissions(list)
     setIsLoading(false)
-  }, [])
+  }, [lcName])
 
   useEffect(() => {
     loadData()
 
-    // Realtime Supabase listener
     const unsubscribe = subscribeToTable('missions', () => {
       loadData()
     })
@@ -42,7 +41,6 @@ export function useSquadMissions() {
     const nextStatus = target.status === 'todo' ? 'completed' : 'todo'
     const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 
-    // Optimistic UI update
     setMissions((prev) =>
       prev.map((m) => {
         if (m.id === id) {
@@ -59,33 +57,38 @@ export function useSquadMissions() {
     await toggleMissionStatusApi(id, nextStatus)
   }
 
-  // Add new mission or broadcast to ALL volunteers
+  // Add new mission or broadcast to ALL volunteers of the active LC
   const addMission = async ({
     title,
     category = 'General',
-    volunteer = 'Aravinth',
+    volunteer,
     dueDate = 'This Saturday',
     isBroadcast = false,
     passcode = '',
   }) => {
     if (!title.trim()) return { success: false, error: 'Task title is required.' }
 
+    // Resolve the first volunteer name for this LC as default
+    const defaultVolunteer = volunteer || (lcTeams[lcName]?.[0]?.name ?? 'Volunteer')
+
     if (isBroadcast) {
       if (passcode !== 'X' && passcode !== 'x') {
         return { success: false, error: 'Administrative passcode required for broadcast creation.' }
       }
 
-      await broadcastMissionToAll({ title, category, dueDate })
+      // Broadcast only to THIS LC's volunteers
+      const lcVolunteers = (lcTeams[lcName] || []).map((m) => m.name)
+      await broadcastMissionToAll({ title, category, dueDate, lcName, lcVolunteers })
       loadData()
       return { success: true }
     } else {
-      await createMission({ volunteer, title, category, dueDate })
+      await createMission({ volunteer: defaultVolunteer, title, category, dueDate, lcName })
       loadData()
       return { success: true }
     }
   }
 
-  // Delete task with passcode guard (Passcode: 'factors')
+  // Delete task — Passcode 'factors'
   const deleteMission = async (id, passcode) => {
     const cleanPass = (passcode || '').trim().toLowerCase()
     if (cleanPass !== 'factors') {

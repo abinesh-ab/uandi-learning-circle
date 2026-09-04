@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Lock } from 'lucide-react'
+import { LCProvider, useLC } from './context/LCContext'
 import TopNavbar from './components/layout/TopNavbar'
 import BottomNavControls from './components/layout/BottomNavControls'
 import HomePage from './components/home/HomePage'
+import MSSCentreHomePage from './components/home/MSSCentreHomePage'
 import ActivitiesPage from './components/activities/ActivitiesPage'
 import ResourcesPage from './components/resources/ResourcesPage'
 import GratitudeVaultPage from './components/gratitude/GratitudeVaultPage'
@@ -11,9 +13,12 @@ import DecksMode from './components/decks/DecksMode'
 import { deckConfig } from './data/data'
 import { useFullscreen } from './hooks/useFullscreen'
 
-export default function App() {
-  const [activeMode, setActiveMode] = useState('home') // 'home' | 'decks' | 'activities' | 'resources' | 'gratitude' | 'missions'
-  const [activeDeck, setActiveDeck] = useState('deck-aug20') // Open deck default
+// ── Inner App — consumes LCContext ────────────────────────────
+function AppInner() {
+  const { activeLc } = useLC()
+
+  const [activeMode, setActiveMode] = useState('home')
+  const [activeDeck, setActiveDeck] = useState('deck-aug20')
   const [currentSlide, setCurrentSlide] = useState(1)
   const [aug13LockedSlides, setAug13LockedSlides] = useState(new Set([4]))
   const [aug13RSVP, setAug13RSVP] = useState(null)
@@ -22,12 +27,19 @@ export default function App() {
   // Passcode gates
   const [spinJamUnlocked, setSpinJamUnlocked] = useState(false)
   const [aug27Unlocked, setAug27Unlocked] = useState(false)
-  const [passcodeTarget, setPasscodeTarget] = useState(null) // 'spinjam' | 'aug27' | null
+  const [passcodeTarget, setPasscodeTarget] = useState(null)
   const [passcodeInput, setPasscodeInput] = useState('')
   const [passcodeError, setPasscodeError] = useState(false)
   const passcodeRef = useRef(null)
 
   const totalSlides = deckConfig[activeDeck]?.slides ?? 1
+
+  // If LC switches away from X Factors and we're on decks, go home
+  useEffect(() => {
+    if (activeLc !== 'the-x-factors' && activeMode === 'decks') {
+      setActiveMode('home')
+    }
+  }, [activeLc, activeMode])
 
   // ── Navigation ──────────────────────────────────────────
   const goToSlide = useCallback(
@@ -68,7 +80,7 @@ export default function App() {
     [aug27Unlocked]
   )
 
-  // ── Switch mode (unlocked for all modes) ─────────────────
+  // ── Switch mode ─────────────────────────────────────────
   const showMode = useCallback((mode) => {
     setActiveMode(mode)
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -154,24 +166,30 @@ export default function App() {
         isFullscreen={isFullscreen}
       />
 
-      {/* Mode: Home */}
+      {/* Mode: Home — X Factors home OR MSS Centre home based on active LC */}
       <div className={`mode-panel${activeMode === 'home' ? ' active' : ''}`}>
-        <HomePage showMode={showMode} />
+        {activeLc === 'the-x-factors' ? (
+          <HomePage showMode={showMode} />
+        ) : (
+          <MSSCentreHomePage showMode={showMode} />
+        )}
       </div>
 
-      {/* Mode: Decks */}
-      <div className={`mode-panel${activeMode === 'decks' ? ' active' : ''}`}>
-        <DecksMode
-          activeDeck={activeDeck}
-          currentSlide={currentSlide}
-          aug13LockedSlides={aug13LockedSlides}
-          aug13RSVP={aug13RSVP}
-          handleRSVP={handleAug13RSVP}
-          navigate={navigate}
-        />
-      </div>
+      {/* Mode: Decks — X Factors only */}
+      {activeLc === 'the-x-factors' && (
+        <div className={`mode-panel${activeMode === 'decks' ? ' active' : ''}`}>
+          <DecksMode
+            activeDeck={activeDeck}
+            currentSlide={currentSlide}
+            aug13LockedSlides={aug13LockedSlides}
+            aug13RSVP={aug13RSVP}
+            handleRSVP={handleAug13RSVP}
+            navigate={navigate}
+          />
+        </div>
+      )}
 
-      {/* Mode: Activities */}
+      {/* Mode: Activities — Universal, no LC filter */}
       <div className={`mode-panel${activeMode === 'activities' ? ' active' : ''}`}>
         <ActivitiesPage
           spinJamUnlocked={spinJamUnlocked}
@@ -179,23 +197,23 @@ export default function App() {
         />
       </div>
 
-      {/* Mode: Resources */}
+      {/* Mode: Resources — LC filtered */}
       <div className={`mode-panel${activeMode === 'resources' ? ' active' : ''}`}>
-        <ResourcesPage />
+        <ResourcesPage activeLc={activeLc} />
       </div>
 
-      {/* Mode: Gratitude Vault */}
+      {/* Mode: Gratitude Vault — LC filtered */}
       <div className={`mode-panel${activeMode === 'gratitude' ? ' active' : ''}`}>
-        <GratitudeVaultPage showMode={showMode} />
+        <GratitudeVaultPage showMode={showMode} activeLc={activeLc} />
       </div>
 
-      {/* Mode: Squad Missions */}
+      {/* Mode: Squad Missions — LC filtered */}
       <div className={`mode-panel${activeMode === 'missions' ? ' active' : ''}`}>
-        <SquadMissionsPage />
+        <SquadMissionsPage activeLc={activeLc} />
       </div>
 
       {/* Bottom Nav Controls (only in Decks mode) */}
-      {activeMode === 'decks' && (
+      {activeMode === 'decks' && activeLc === 'the-x-factors' && (
         <BottomNavControls
           currentSlide={currentSlide}
           totalSlides={totalSlides}
@@ -257,5 +275,14 @@ export default function App() {
         </div>
       )}
     </div>
+  )
+}
+
+// ── Root App — wraps everything in LCProvider ─────────────────
+export default function App() {
+  return (
+    <LCProvider>
+      <AppInner />
+    </LCProvider>
   )
 }

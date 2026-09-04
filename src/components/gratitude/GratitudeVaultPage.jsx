@@ -1,8 +1,9 @@
 import { useState, useMemo } from 'react'
 import { Heart, Sparkles, Plus, Trash2, Send, X, Lock, Filter, Check, Database, HardDrive } from 'lucide-react'
-import { teamMembers } from '../../data/teamData'
+import { lcTeams } from '../../data/teamData'
 import { useGratitudeVault } from '../../hooks/useGratitudeVault'
 import AdminDeleteModal from '../common/AdminDeleteModal'
+import { lcConfig } from '../../data/lcConfig'
 
 const COLOR_MAP = {
   amber: {
@@ -44,9 +45,13 @@ const COLOR_MAP = {
 
 const QUICK_EMOJIS = ['🌟', '🌻', '🐝', '🚀', '❤️', '👏', '🧠', '🤝', '🔥', '💡', '👑']
 
-export default function GratitudeVaultPage({ showMode }) {
+export default function GratitudeVaultPage({ showMode, activeLc = 'the-x-factors' }) {
   const { affirmations, isLoading, isSupabaseConfigured, savedSender, addAffirmation, toggleReaction, deleteAffirmation } =
-    useGratitudeVault()
+    useGratitudeVault(activeLc)
+
+  // Members for this LC
+  const lcMembers = lcTeams[activeLc] || lcTeams['the-x-factors']
+  const lcMeta = lcConfig[activeLc] || lcConfig['the-x-factors']
 
   const [selectedVolunteer, setSelectedVolunteer] = useState('ALL') // 'ALL' | volunteer name
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -55,16 +60,18 @@ export default function GratitudeVaultPage({ showMode }) {
   const [passcode, setPasscode] = useState('')
 
   // Form State
-  const [recipient, setRecipient] = useState(teamMembers[0]?.name || 'Aravinth')
+  const [recipient, setRecipient] = useState(lcMembers[0]?.name || '')
   const [message, setMessage] = useState('')
   const [sender, setSender] = useState(savedSender || '')
+
   const [selectedColor, setSelectedColor] = useState('amber')
 
-  // Volunteers List
+  // Volunteers List — filtered to active LC's team
   const volunteerNames = useMemo(() => {
-    const names = teamMembers.map((m) => m.name)
+    const names = lcMembers.map((m) => m.name)
     return [...names, 'Entire Tribe']
-  }, [])
+  }, [lcMembers])
+
 
   // Filtered Affirmations
   const filteredAffirmations = useMemo(() => {
@@ -197,8 +204,8 @@ export default function GratitudeVaultPage({ showMode }) {
             </span>
           </button>
 
-          {/* Individual Volunteers */}
-          {teamMembers.map((member) => {
+          {/* Individual Volunteers — filtered to active LC */}
+          {lcMembers.map((member) => {
             const isSelected = selectedVolunteer === member.name
             const count = countsPerVolunteer[member.name] || 0
 

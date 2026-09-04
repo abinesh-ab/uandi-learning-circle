@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import confetti from 'canvas-confetti'
 import { CheckSquare, Square, Plus, CheckCircle2, Clock, Lock, X, ChevronDown, ChevronUp, Sparkles, Database, HardDrive, Trash2, Filter } from 'lucide-react'
-import { teamMembers } from '../../data/teamData'
+import { lcTeams } from '../../data/teamData'
 import { useSquadMissions } from '../../hooks/useSquadMissions'
 import AdminDeleteModal from '../common/AdminDeleteModal'
 
@@ -14,8 +14,11 @@ const CATEGORY_COLORS = {
   General: 'bg-slate-100 text-slate-800 border-slate-200',
 }
 
-export default function SquadMissionsPage() {
-  const { missions, isLoading, isSupabaseConfigured, toggleMissionStatus, addMission, deleteMission } = useSquadMissions()
+export default function SquadMissionsPage({ activeLc = 'the-x-factors' }) {
+  const { missions, isLoading, isSupabaseConfigured, toggleMissionStatus, addMission, deleteMission } = useSquadMissions(activeLc)
+
+  // Active LC's team members
+  const teamMembers = lcTeams[activeLc] || lcTeams['the-x-factors']
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
@@ -29,7 +32,7 @@ export default function SquadMissionsPage() {
   // Form State for Adding Missions
   const [title, setTitle] = useState('')
   const [category, setCategory] = useState('Student Log')
-  const [volunteer, setVolunteer] = useState(teamMembers[0]?.name || 'Aravinth')
+  const [volunteer, setVolunteer] = useState(teamMembers[0]?.name || '')
   const [dueDate, setDueDate] = useState('This Saturday')
   const [isBroadcast, setIsBroadcast] = useState(true)
   const [passcode, setPasscode] = useState('')
@@ -52,7 +55,8 @@ export default function SquadMissionsPage() {
       }
     })
     return stats
-  }, [missions])
+  }, [missions, teamMembers])
+
 
   // Header Progress display (Dynamic based on selected volunteer filter)
   const headerProgressStats = useMemo(() => {
@@ -177,7 +181,32 @@ export default function SquadMissionsPage() {
             Row-based volunteer accountability matrix. Track Saturday deliverables, student logs &amp; class plans.
           </p>
         </div>
+ {/* Single Volunteer Dropdown Selector */}
+          <div className="flex items-center gap-2">
+            <select
+              value={selectedVolunteerFilter}
+              onChange={(e) => setSelectedVolunteerFilter(e.target.value)}
+              className="px-3.5 py-2.5 bg-white border border-slate-200 text-slate-900 font-bold text-xs rounded-2xl shadow-sm focus:outline-none focus:border-brand-blue cursor-pointer"
+            >
+              <option value="ALL">🌟 All Volunteers ({teamMembers.length})</option>
+              {teamMembers.map((m) => (
+                <option key={m.id} value={m.name}>
+                  {m.name}
+                </option>
+              ))}
+            </select>
 
+            {selectedVolunteerFilter !== 'ALL' && (
+              <button
+                onClick={() => setSelectedVolunteerFilter('ALL')}
+                className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-2xl transition-colors shrink-0 flex items-center gap-1"
+                title="Reset to view all volunteers"
+              >
+                <span>Clear Filter</span>
+                <span>✕</span>
+              </button>
+            )}
+          </div>
         {/* Board Progress Badge, Volunteer Dropdown Filter & Add Action Button */}
         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-between md:justify-end">
           {/* Progress Badge */}
@@ -195,32 +224,7 @@ export default function SquadMissionsPage() {
             </div>
           </div>
 
-          {/* Single Volunteer Dropdown Selector */}
-          <div className="flex items-center gap-2">
-            <select
-              value={selectedVolunteerFilter}
-              onChange={(e) => setSelectedVolunteerFilter(e.target.value)}
-              className="px-3.5 py-2.5 bg-white border border-slate-200 text-slate-900 font-bold text-xs rounded-2xl shadow-sm focus:outline-none focus:border-brand-blue cursor-pointer"
-            >
-              <option value="ALL">🌟 All Volunteers ({teamMembers.length})</option>
-              {teamMembers.map((m) => (
-                <option key={m.id} value={m.name}>
-                  {m.name} ({m.focus})
-                </option>
-              ))}
-            </select>
-
-            {selectedVolunteerFilter !== 'ALL' && (
-              <button
-                onClick={() => setSelectedVolunteerFilter('ALL')}
-                className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-2xl transition-colors shrink-0 flex items-center gap-1"
-                title="Reset to view all volunteers"
-              >
-                <span>Clear Filter</span>
-                <span>✕</span>
-              </button>
-            )}
-          </div>
+         
 
           <button
             onClick={() => setIsAddModalOpen(true)}

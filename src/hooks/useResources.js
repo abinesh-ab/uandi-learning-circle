@@ -7,22 +7,20 @@ import {
 } from '../services/api'
 import { isSupabaseConfigured } from '../services/supabaseClient'
 
-export function useResources() {
+export function useResources(lcName = 'the-x-factors') {
   const [resources, setResources] = useState([])
   const [isLoading, setIsLoading] = useState(true)
 
-  // Load initial resources
   const loadData = useCallback(async () => {
     setIsLoading(true)
-    const list = await fetchResources()
+    const list = await fetchResources(lcName)
     setResources(list)
     setIsLoading(false)
-  }, [])
+  }, [lcName])
 
   useEffect(() => {
     loadData()
 
-    // Realtime Supabase listener
     const unsubscribe = subscribeToTable('resources', () => {
       loadData()
     })
@@ -32,16 +30,8 @@ export function useResources() {
     }
   }, [loadData])
 
-  // Add new resource (Requires passcode 'x' or 'X')
-  const addResource = async ({
-    title,
-    category,
-    grade,
-    description,
-    file_url,
-    file_type,
-    passcode,
-  }) => {
+  // Add new resource — Passcode 'x'
+  const addResource = async ({ title, category, grade, description, file_url, file_type, passcode }) => {
     const cleanPass = (passcode || '').trim().toLowerCase()
     if (cleanPass !== 'x') {
       return { success: false, error: 'Invalid passcode' }
@@ -51,7 +41,6 @@ export function useResources() {
       return { success: false, error: 'Title, category, and file URL are required.' }
     }
 
-    // Optimistic UI insert
     const tempObj = {
       id: `temp-${Date.now()}`,
       title: title.trim(),
@@ -61,15 +50,16 @@ export function useResources() {
       file_url: file_url.trim(),
       file_type: (file_type || 'PDF').toUpperCase().trim(),
       created_at: new Date().toISOString(),
+      lc_name: lcName,
     }
 
     setResources((prev) => [tempObj, ...prev])
-    await postResource({ title, category, grade, description, file_url, file_type })
+    await postResource({ title, category, grade, description, file_url, file_type, lcName })
     loadData()
     return { success: true }
   }
 
-  // Delete resource (Requires passcode 'factors')
+  // Delete resource — Passcode 'factors'
   const deleteResource = async (id, passcode) => {
     const cleanPass = (passcode || '').trim().toLowerCase()
     if (cleanPass !== 'factors') {
@@ -77,7 +67,7 @@ export function useResources() {
     }
 
     setResources((prev) => prev.filter((item) => item.id !== id))
-    await deleteResourceApi(id)
+    await deleteResourceApi(id, lcName)
     return { success: true }
   }
 
