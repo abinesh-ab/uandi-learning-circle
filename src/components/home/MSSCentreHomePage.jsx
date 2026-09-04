@@ -47,11 +47,12 @@ export default function MSSCentreHomePage({ showMode }) {
       {/* ── Hero ──────────────────────────────────────────── */}
       <div className="relative w-full overflow-hidden" style={{ minHeight: '280px' }}>
         <img
-          src={getAssetUrl('FN-Tuitions.jpeg')}
+          src={getAssetUrl('mss-centre-hero.jpg')}
           alt="MSS Centre"
           className="absolute inset-0 w-full h-full object-cover object-center"
           onError={(e) => { e.target.style.display = 'none' }}
         />
+
         {/* Dark overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-slate-950/70 via-slate-950/60 to-slate-950/80" />
 
