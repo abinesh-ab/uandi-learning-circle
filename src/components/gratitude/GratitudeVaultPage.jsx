@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Heart, Sparkles, Plus, Trash2, Send, X, Lock, Filter, Check, Database, HardDrive } from 'lucide-react'
 import { lcTeams } from '../../data/teamData'
 import { useGratitudeVault } from '../../hooks/useGratitudeVault'
@@ -65,6 +65,12 @@ export default function GratitudeVaultPage({ showMode, activeLc = 'the-x-factors
   const [sender, setSender] = useState(savedSender || '')
 
   const [selectedColor, setSelectedColor] = useState('amber')
+
+  // Reset filter and recipient when LC switches
+  useEffect(() => {
+    setSelectedVolunteer('ALL')
+    setRecipient(lcMembers[0]?.name || '')
+  }, [activeLc, lcMembers])
 
   // Volunteers List — filtered to active LC's team
   const volunteerNames = useMemo(() => {

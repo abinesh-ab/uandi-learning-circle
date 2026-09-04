@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import confetti from 'canvas-confetti'
 import { CheckSquare, Square, Plus, CheckCircle2, Clock, Lock, X, ChevronDown, ChevronUp, Sparkles, Database, HardDrive, Trash2, Filter } from 'lucide-react'
 import { lcTeams } from '../../data/teamData'
@@ -37,6 +37,13 @@ export default function SquadMissionsPage({ activeLc = 'the-x-factors' }) {
   const [isBroadcast, setIsBroadcast] = useState(true)
   const [passcode, setPasscode] = useState('')
   const [formError, setFormError] = useState('')
+
+  // Sync state whenever the active LC or team members change
+  useEffect(() => {
+    setSelectedVolunteerFilter('ALL')
+    setVolunteer(teamMembers[0]?.name || '')
+    setExpandedRows({})
+  }, [activeLc, teamMembers])
 
   // Calculate stats per volunteer (Handles 0 tasks gracefully as 100% / All caught up!)
   const volunteerStats = useMemo(() => {
@@ -86,7 +93,7 @@ export default function SquadMissionsPage({ activeLc = 'the-x-factors' }) {
   const displayedMembers = useMemo(() => {
     if (selectedVolunteerFilter === 'ALL') return teamMembers
     return teamMembers.filter((m) => m.name === selectedVolunteerFilter)
-  }, [selectedVolunteerFilter])
+  }, [selectedVolunteerFilter, teamMembers])
 
   // Delete handlers (Passcode: 'factors')
   const promptDelete = (id, taskTitle) => {

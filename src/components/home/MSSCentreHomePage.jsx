@@ -45,28 +45,28 @@ export default function MSSCentreHomePage({ showMode }) {
   return (
     <div className="h-full overflow-y-auto bg-slate-50">
       {/* ── Hero ──────────────────────────────────────────── */}
-      <div className="relative w-full overflow-hidden" style={{ minHeight: '280px' }}>
+      <div className="relative w-full overflow-hidden min-h-[440px] sm:min-h-[520px] md:min-h-[580px]">
         <img
           src={getAssetUrl('mss-centre-hero.jpg')}
           alt="MSS Centre"
-          className="absolute inset-0 w-full h-full object-cover object-center"
+          className="absolute inset-0 w-full h-full object-cover object-[center_35%]"
           onError={(e) => { e.target.style.display = 'none' }}
         />
 
-        {/* Dark overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/70 via-slate-950/60 to-slate-950/80" />
+        {/* Subtle gradient overlay to keep title readable while keeping the full photo bright and clear */}
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-slate-950/40 to-slate-950/80" />
 
         {/* Hero content */}
-        <div className="relative z-10 flex flex-col items-center justify-center text-center px-6 py-16">
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white text-xs font-bold px-4 py-1.5 rounded-full mb-4">
+        <div className="relative z-10 flex flex-col items-center justify-center text-center px-6 py-20 sm:py-28">
+          <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-md border border-white/30 text-white text-xs font-bold px-4 py-1.5 rounded-full mb-4 shadow-lg">
             🏛️ MSS Centre
           </div>
-          <h1 className="text-3xl sm:text-4xl font-black text-white font-heading leading-tight mb-2">
+          <h1 className="text-3xl sm:text-5xl font-black text-white font-heading leading-tight mb-3 drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)]">
             MSS Centre
             <span className="text-amber-400"> • </span>
             Learning Circle Hub
           </h1>
-          <p className="text-white/75 text-sm max-w-md">
+          <p className="text-white/90 text-sm sm:text-base font-medium max-w-lg drop-shadow-[0_2px_6px_rgba(0,0,0,0.8)]">
             Three Learning Circles. Hundreds of students. One relentless squad of changemakers.
           </p>
         </div>
