@@ -8,10 +8,12 @@ import {
   subscribeToTable,
 } from '../services/api'
 import { isSupabaseConfigured } from '../services/supabaseClient'
+import { useLC } from '../context/LCContext'
 
 const SENDER_KEY = 'xfactors_saved_sender_name'
 
 export function useGratitudeVault(lcName = 'the-x-factors') {
+  const { validateDeletePasscode } = useLC()
   const [affirmations, setAffirmations] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [savedSender, setSavedSender] = useState(() => {
@@ -103,10 +105,9 @@ export function useGratitudeVault(lcName = 'the-x-factors') {
     await reactToAffirmation(id, emoji, currentReactions)
   }
 
-  // Delete affirmation — Passcode 'factors'
+  // Delete affirmation — validated against active LC's deletePasscode
   const deleteAffirmation = async (id, passcode) => {
-    const cleanPass = (passcode || '').trim().toLowerCase()
-    if (cleanPass !== 'factors') {
+    if (!validateDeletePasscode(passcode)) {
       return false
     }
 

@@ -343,3 +343,6 @@ export const lcTeams = {
   kanakkukaanumkovai: kanakkuTeam,
 }
 
+// Alias used by LCContext to merge with dynamic LC teams
+export const STATIC_TEAMS = lcTeams
+

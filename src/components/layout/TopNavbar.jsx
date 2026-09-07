@@ -2,10 +2,9 @@ import { useState, useRef, useEffect } from 'react'
 import { Layers, ChevronDown, Check } from 'lucide-react'
 import { deckConfig } from '../../data/data'
 import { useLC } from '../../context/LCContext'
-import { lcConfig, ALL_LC_SLUGS } from '../../data/lcConfig'
 
 export default function TopNavbar({ activeMode, showMode, activeDeck, switchDeck, isFullscreen }) {
-  const { activeLc, setActiveLc, activeLcMeta } = useLC()
+  const { activeLc, setActiveLc, activeLcMeta, allLcSlugs, allLcConfig } = useLC()
   const [lcDropdownOpen, setLcDropdownOpen] = useState(false)
   const dropdownRef = useRef(null)
 
@@ -22,7 +21,7 @@ export default function TopNavbar({ activeMode, showMode, activeDeck, switchDeck
 
   if (isFullscreen) return null
 
-  // Nav items — hide 'home' (Decks) for non-X-Factors LCs
+  // Nav items — LC Call Decks only for X Factors
   const navItems = [
     { id: 'home', label: 'Home', emoji: '🏠', xfOnly: false },
     { id: 'decks', label: 'LC Call Decks', emoji: '📚', xfOnly: true },
@@ -35,8 +34,8 @@ export default function TopNavbar({ activeMode, showMode, activeDeck, switchDeck
   const handleSwitchLC = (slug) => {
     setActiveLc(slug)
     setLcDropdownOpen(false)
-    // If switching away from X Factors and currently on decks → go to home
-    if (slug !== 'the-x-factors' && (activeMode === 'decks')) {
+    // If switching away from X Factors while on decks → go home
+    if (slug !== 'the-x-factors' && activeMode === 'decks') {
       showMode('home')
     }
   }
@@ -71,32 +70,35 @@ export default function TopNavbar({ activeMode, showMode, activeDeck, switchDeck
             <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${lcDropdownOpen ? 'rotate-180' : ''}`} />
           </button>
 
-          {/* Dropdown */}
+          {/* Dropdown — lists ALL LCs (static + dynamic) */}
           {lcDropdownOpen && (
-            <div className="absolute top-full left-0 mt-2 w-60 bg-white rounded-2xl border border-slate-200 shadow-2xl overflow-hidden z-[9999] animate-fade-in">
+            <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-2xl border border-slate-200 shadow-2xl overflow-hidden z-[9999] animate-fade-in">
               <div className="px-4 py-3 border-b border-slate-100">
                 <p className="text-xs font-black text-slate-500 uppercase tracking-wider">Switch Learning Circle</p>
               </div>
-              {ALL_LC_SLUGS.map((slug) => {
-                const lc = lcConfig[slug]
-                const isActive = activeLc === slug
-                return (
-                  <button
-                    key={slug}
-                    onClick={() => handleSwitchLC(slug)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors text-sm ${
-                      isActive ? 'bg-blue-50 text-brand-blue font-bold' : 'hover:bg-slate-50 text-slate-700 font-medium'
-                    }`}
-                  >
-                    <span className="text-xl">{lc.emoji}</span>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-bold leading-tight truncate">{lc.displayName}</div>
-                      <div className="text-xs text-slate-400 truncate">{lc.tagline}</div>
-                    </div>
-                    {isActive && <Check className="w-4 h-4 text-brand-blue shrink-0" />}
-                  </button>
-                )
-              })}
+              <div className="max-h-72 overflow-y-auto">
+                {allLcSlugs.map((slug) => {
+                  const lc = allLcConfig[slug]
+                  if (!lc) return null
+                  const isActive = activeLc === slug
+                  return (
+                    <button
+                      key={slug}
+                      onClick={() => handleSwitchLC(slug)}
+                      className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors text-sm ${
+                        isActive ? 'bg-blue-50 text-brand-blue font-bold' : 'hover:bg-slate-50 text-slate-700 font-medium'
+                      }`}
+                    >
+                      <span className="text-xl">{lc.emoji}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-bold leading-tight truncate">{lc.displayName}</div>
+                        <div className="text-xs text-slate-400 truncate">{lc.tagline}</div>
+                      </div>
+                      {isActive && <Check className="w-4 h-4 text-brand-blue shrink-0" />}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
           )}
         </div>

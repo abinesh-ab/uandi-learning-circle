@@ -6,8 +6,10 @@ import {
   subscribeToTable,
 } from '../services/api'
 import { isSupabaseConfigured } from '../services/supabaseClient'
+import { useLC } from '../context/LCContext'
 
 export function useResources(lcName = 'the-x-factors') {
+  const { validateEnablePasscode, validateDeletePasscode } = useLC()
   const [resources, setResources] = useState([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -30,10 +32,9 @@ export function useResources(lcName = 'the-x-factors') {
     }
   }, [loadData])
 
-  // Add new resource — Passcode 'x'
+  // Add new resource — validated against active LC's enablePasscode
   const addResource = async ({ title, category, grade, description, file_url, file_type, passcode }) => {
-    const cleanPass = (passcode || '').trim().toLowerCase()
-    if (cleanPass !== 'x') {
+    if (!validateEnablePasscode(passcode)) {
       return { success: false, error: 'Invalid passcode' }
     }
 
@@ -59,10 +60,9 @@ export function useResources(lcName = 'the-x-factors') {
     return { success: true }
   }
 
-  // Delete resource — Passcode 'factors'
+  // Delete resource — validated against active LC's deletePasscode
   const deleteResource = async (id, passcode) => {
-    const cleanPass = (passcode || '').trim().toLowerCase()
-    if (cleanPass !== 'factors') {
+    if (!validateDeletePasscode(passcode)) {
       return { success: false, error: 'Invalid passcode' }
     }
 

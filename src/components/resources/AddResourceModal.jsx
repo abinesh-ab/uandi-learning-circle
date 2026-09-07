@@ -1,7 +1,12 @@
 import { useState, useRef, useEffect } from 'react'
 import { Plus, X, Lock, FileText, Link, File } from 'lucide-react'
 
-const CATEGORY_OPTIONS = [
+const GRADE_OPTIONS = ['General', '9th Std', '10th Std', '11th Std', '12th Std', 'Primary']
+
+const FILE_TYPES = ['PDF', 'DOC', 'LINK', 'SHEET']
+
+// Fallback category options if none are passed from parent
+const FALLBACK_CATEGORY_OPTIONS = [
   '9th Maths',
   'Accountancy',
   'Templates',
@@ -10,13 +15,10 @@ const CATEGORY_OPTIONS = [
   'Foundational Numeracy',
 ]
 
-const GRADE_OPTIONS = ['General', '9th Std', '10th Std', '11th Std', '12th Std', 'Primary']
-
-const FILE_TYPES = ['PDF', 'DOC', 'LINK', 'SHEET']
-
-export default function AddResourceModal({ isOpen, onClose, onSubmit }) {
+export default function AddResourceModal({ isOpen, onClose, onSubmit, categoryOptions }) {
+  const CATEGORY_OPTIONS = (categoryOptions && categoryOptions.length > 0) ? categoryOptions : FALLBACK_CATEGORY_OPTIONS
   const [title, setTitle] = useState('')
-  const [category, setCategory] = useState('9th Maths')
+  const [category, setCategory] = useState(CATEGORY_OPTIONS[0] || '9th Maths')
   const [grade, setGrade] = useState('General')
   const [description, setDescription] = useState('')
   const [fileUrl, setFileUrl] = useState('')

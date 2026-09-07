@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import confetti from 'canvas-confetti'
 import {
   fetchMissions,
   createMission,
@@ -8,9 +9,10 @@ import {
   subscribeToTable,
 } from '../services/api'
 import { isSupabaseConfigured } from '../services/supabaseClient'
-import { lcTeams } from '../data/teamData'
+import { useLC } from '../context/LCContext'
 
-export function useSquadMissions(lcName = 'the-x-factors') {
+export function useSquadMissions(lcName = 'the-x-factors', teamMembers = []) {
+  const { validateEnablePasscode, validateDeletePasscode } = useLC()
   const [missions, setMissions] = useState([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -69,15 +71,15 @@ export function useSquadMissions(lcName = 'the-x-factors') {
     if (!title.trim()) return { success: false, error: 'Task title is required.' }
 
     // Resolve the first volunteer name for this LC as default
-    const defaultVolunteer = volunteer || (lcTeams[lcName]?.[0]?.name ?? 'Volunteer')
+    const defaultVolunteer = volunteer || (teamMembers[0]?.name ?? 'Volunteer')
 
     if (isBroadcast) {
-      if (passcode !== 'X' && passcode !== 'x') {
+      if (!validateEnablePasscode(passcode)) {
         return { success: false, error: 'Administrative passcode required for broadcast creation.' }
       }
 
       // Broadcast only to THIS LC's volunteers
-      const lcVolunteers = (lcTeams[lcName] || []).map((m) => m.name)
+      const lcVolunteers = (teamMembers || []).map((m) => m.name)
       await broadcastMissionToAll({ title, category, dueDate, lcName, lcVolunteers })
       loadData()
       return { success: true }
@@ -88,10 +90,9 @@ export function useSquadMissions(lcName = 'the-x-factors') {
     }
   }
 
-  // Delete task — Passcode 'factors'
+  // Delete task — validated against active LC's deletePasscode
   const deleteMission = async (id, passcode) => {
-    const cleanPass = (passcode || '').trim().toLowerCase()
-    if (cleanPass !== 'factors') {
+    if (!validateDeletePasscode(passcode)) {
       return { success: false, error: 'Invalid passcode' }
     }
     const target = missions.find((m) => m.id === id)

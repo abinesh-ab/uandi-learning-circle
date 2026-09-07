@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import confetti from 'canvas-confetti'
 import { CheckSquare, Square, Plus, CheckCircle2, Clock, Lock, X, ChevronDown, ChevronUp, Sparkles, Database, HardDrive, Trash2, Filter } from 'lucide-react'
-import { lcTeams } from '../../data/teamData'
+import { useLC } from '../../context/LCContext'
 import { useSquadMissions } from '../../hooks/useSquadMissions'
 import AdminDeleteModal from '../common/AdminDeleteModal'
 
@@ -11,14 +11,32 @@ const CATEGORY_COLORS = {
   'Academic Plan': 'bg-amber-100 text-amber-800 border-amber-200',
   'Resource Prep': 'bg-teal-100 text-teal-800 border-teal-200',
   Admin: 'bg-rose-100 text-rose-800 border-rose-200',
+  'Class Activity': 'bg-cyan-100 text-cyan-800 border-cyan-200',
+  'Centre Task': 'bg-orange-100 text-orange-800 border-orange-200',
   General: 'bg-slate-100 text-slate-800 border-slate-200',
 }
 
-export default function SquadMissionsPage({ activeLc = 'the-x-factors' }) {
-  const { missions, isLoading, isSupabaseConfigured, toggleMissionStatus, addMission, deleteMission } = useSquadMissions(activeLc)
+// Fallback colour for unknown/dynamic categories
+function getCategoryColor(cat) {
+  return CATEGORY_COLORS[cat] || 'bg-violet-100 text-violet-800 border-violet-200'
+}
 
-  // Active LC's team members
-  const teamMembers = lcTeams[activeLc] || lcTeams['the-x-factors']
+export default function SquadMissionsPage({ activeLc = 'the-x-factors' }) {
+  const { activeLcMeta, allTeams } = useLC()
+
+  // Active LC's team members — from merged context (works for static AND dynamic LCs)
+  const teamMembers = useMemo(
+    () => allTeams[activeLc] || allTeams['the-x-factors'] || [],
+    [allTeams, activeLc]
+  )
+
+  // Mission categories from active LC config
+  const missionCategories = useMemo(
+    () => activeLcMeta?.missionCategories || ['Student Log', 'Lesson Plan', 'General'],
+    [activeLcMeta]
+  )
+
+  const { missions, isLoading, isSupabaseConfigured, toggleMissionStatus, addMission, deleteMission } = useSquadMissions(activeLc, teamMembers)
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
@@ -31,7 +49,7 @@ export default function SquadMissionsPage({ activeLc = 'the-x-factors' }) {
 
   // Form State for Adding Missions
   const [title, setTitle] = useState('')
-  const [category, setCategory] = useState('Student Log')
+  const [category, setCategory] = useState(missionCategories[0] || 'Student Log')
   const [volunteer, setVolunteer] = useState(teamMembers[0]?.name || '')
   const [dueDate, setDueDate] = useState('This Saturday')
   const [isBroadcast, setIsBroadcast] = useState(true)
@@ -43,7 +61,8 @@ export default function SquadMissionsPage({ activeLc = 'the-x-factors' }) {
     setSelectedVolunteerFilter('ALL')
     setVolunteer(teamMembers[0]?.name || '')
     setExpandedRows({})
-  }, [activeLc, teamMembers])
+    setCategory(missionCategories[0] || 'Student Log')
+  }, [activeLc, teamMembers, missionCategories])
 
   // Calculate stats per volunteer (Handles 0 tasks gracefully as 100% / All caught up!)
   const volunteerStats = useMemo(() => {
@@ -362,7 +381,7 @@ export default function SquadMissionsPage({ activeLc = 'the-x-factors' }) {
                                 <div className="flex items-center gap-1.5 flex-wrap">
                                   <span
                                     className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded border ${
-                                      CATEGORY_COLORS[task.category] || CATEGORY_COLORS.General
+                                      getCategoryColor(task.category)
                                     }`}
                                   >
                                     {task.category}
@@ -537,12 +556,11 @@ export default function SquadMissionsPage({ activeLc = 'the-x-factors' }) {
                     onChange={(e) => setCategory(e.target.value)}
                     className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-2xl text-xs font-bold text-slate-900 focus:outline-none focus:border-brand-blue"
                   >
-                    <option value="Student Log">Student Log</option>
-                    <option value="Lesson Plan">Lesson Plan</option>
-                    <option value="Academic Plan">Academic Plan</option>
-                    <option value="Resource Prep">Resource Prep</option>
-                    <option value="Admin">Admin</option>
-                    <option value="General">General</option>
+                    {missionCategories.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
                   </select>
                 </div>
 

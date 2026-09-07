@@ -1,55 +1,130 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react'
-import { resolveLcSlug, lcConfig, ALL_LC_SLUGS } from '../data/lcConfig'
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react'
+import { resolveLcSlug, lcConfig as staticLcConfig, ALL_LC_SLUGS as STATIC_ALL_SLUGS } from '../data/lcConfig'
+import { STATIC_TEAMS } from '../data/teamData'
+import { useDynamicLCs } from '../hooks/useDynamicLCs'
 
-// ── LC Context ────────────────────────────────────────────────
 const LCContext = createContext(null)
 
-/** Read current LC slug from URL query param ?lc=... */
 function readLcFromURL() {
   try {
     const params = new URLSearchParams(window.location.search)
-    return resolveLcSlug(params.get('lc'))
+    return params.get('lc') || 'the-x-factors'
   } catch {
     return 'the-x-factors'
   }
 }
 
-/** Write LC slug to URL without page reload */
 function writeLcToURL(slug) {
   try {
     const url = new URL(window.location.href)
     url.searchParams.set('lc', slug)
     window.history.replaceState(null, '', url.toString())
-  } catch {
-    // ignore in environments without history API
-  }
+  } catch {}
 }
 
 export function LCProvider({ children }) {
-  const [activeLc, setActiveLcState] = useState(() => readLcFromURL())
+  const [activeLcRaw, setActiveLcRaw] = useState(() => readLcFromURL())
+  const {
+    dynamicLcConfig,
+    dynamicTeams,
+    dynamicRows,
+    isLoading: dynamicLoading,
+    addDynamicLC,
+    updateDynamicLC,
+  } = useDynamicLCs()
 
-  /** Switch active LC — updates state AND URL param */
+  // Merged LC config: static entries always take priority over dynamic
+  const allLcConfig = useMemo(
+    () => ({ ...dynamicLcConfig, ...staticLcConfig }),
+    [dynamicLcConfig]
+  )
+
+  // Merged teams: static always wins
+  const allTeams = useMemo(
+    () => ({ ...dynamicTeams, ...STATIC_TEAMS }),
+    [dynamicTeams]
+  )
+
+  // Merged slug list: static first, then dynamic (deduped)
+  const allLcSlugs = useMemo(() => {
+    const dynamicSlugs = Object.keys(dynamicLcConfig)
+    return [...STATIC_ALL_SLUGS, ...dynamicSlugs]
+  }, [dynamicLcConfig])
+
+  const allValidSlugs = useMemo(() => new Set(allLcSlugs), [allLcSlugs])
+
+  // Resolve activeLc — falls back to the-x-factors if slug not yet in merged list
+  const activeLc = useMemo(
+    () => resolveLcSlug(activeLcRaw, allValidSlugs),
+    [activeLcRaw, allValidSlugs]
+  )
+
   const setActiveLc = useCallback((slug) => {
-    const resolved = resolveLcSlug(slug)
-    setActiveLcState(resolved)
-    writeLcToURL(resolved)
+    setActiveLcRaw(slug)
+    writeLcToURL(slug)
   }, [])
 
-  // On mount, ensure URL param is set (handles direct visits without ?lc=)
+  // Keep URL in sync whenever activeLc changes
   useEffect(() => {
     writeLcToURL(activeLc)
   }, [activeLc])
 
-  const activeLcMeta = lcConfig[activeLc] || lcConfig['the-x-factors']
+  const activeLcMeta = allLcConfig[activeLc] || staticLcConfig['the-x-factors']
 
-  return (
-    <LCContext.Provider value={{ activeLc, setActiveLc, activeLcMeta, lcConfig, ALL_LC_SLUGS }}>
-      {children}
-    </LCContext.Provider>
+  // Passcode validators for the currently active LC
+  const validateEnablePasscode = useCallback(
+    (passcode) => {
+      const clean = (passcode || '').trim().toLowerCase()
+      return clean === (activeLcMeta.enablePasscode || '').toLowerCase()
+    },
+    [activeLcMeta]
   )
+
+  const validateDeletePasscode = useCallback(
+    (passcode) => {
+      const clean = (passcode || '').trim().toLowerCase()
+      return clean === (activeLcMeta.deletePasscode || '').toLowerCase()
+    },
+    [activeLcMeta]
+  )
+
+  const contextValue = useMemo(
+    () => ({
+      activeLc,
+      setActiveLc,
+      activeLcMeta,
+      allLcConfig,
+      allLcSlugs,
+      allTeams,
+      dynamicRows,
+      dynamicLoading,
+      addDynamicLC,
+      updateDynamicLC,
+      validateEnablePasscode,
+      validateDeletePasscode,
+      // Backward-compat aliases
+      lcConfig: allLcConfig,
+      ALL_LC_SLUGS: allLcSlugs,
+    }),
+    [
+      activeLc,
+      setActiveLc,
+      activeLcMeta,
+      allLcConfig,
+      allLcSlugs,
+      allTeams,
+      dynamicRows,
+      dynamicLoading,
+      addDynamicLC,
+      updateDynamicLC,
+      validateEnablePasscode,
+      validateDeletePasscode,
+    ]
+  )
+
+  return <LCContext.Provider value={contextValue}>{children}</LCContext.Provider>
 }
 
-/** Hook: consume LC context anywhere in the tree */
 export function useLC() {
   const ctx = useContext(LCContext)
   if (!ctx) throw new Error('useLC must be used inside <LCProvider>')

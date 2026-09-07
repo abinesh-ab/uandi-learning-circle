@@ -1,6 +1,7 @@
 import { supabase, isSupabaseConfigured } from './supabaseClient'
 import { teamMembers } from '../data/teamData'
 import { initialResources } from '../data/resourcesData'
+import { getAllKnownLcSlugs } from './lcApi'
 
 // LocalStorage Keys for Fallback Mode — keyed per LC
 const LS_KEYS = {
@@ -133,8 +134,8 @@ export async function reactToAffirmation(id, emoji, currentReactions = {}) {
   }
 
   if (!isSupabaseConfigured) {
-    // Best-effort update across all LC local keys
-    ;['the-x-factors', 'majaraam', 'kanakkukaanumkovai'].forEach((lc) => {
+    // Best-effort update across all known LC local keys
+    getAllKnownLcSlugs().forEach((lc) => {
       const localList = getLocal(LS_KEYS.AFFIRMATIONS(lc), [])
       if (localList.some((item) => item.id === id)) {
         const updated = localList.map((item) => (item.id === id ? { ...item, reactions: updatedReactions } : item))
@@ -159,8 +160,8 @@ export async function reactToAffirmation(id, emoji, currentReactions = {}) {
 }
 
 export async function deleteAffirmationApi(id) {
-  // Remove from all LC local storage
-  ;['the-x-factors', 'majaraam', 'kanakkukaanumkovai'].forEach((lc) => {
+  // Remove from all known LC local storage keys
+  getAllKnownLcSlugs().forEach((lc) => {
     const localList = getLocal(LS_KEYS.AFFIRMATIONS(lc), [])
     setLocal(LS_KEYS.AFFIRMATIONS(lc), localList.filter((item) => item.id !== id))
   })

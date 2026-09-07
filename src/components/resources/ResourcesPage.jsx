@@ -14,7 +14,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react'
-import { resourceCategories } from '../../data/resourcesData'
+import { useLC } from '../../context/LCContext'
 import { useResources } from '../../hooks/useResources'
 import AddResourceModal from './AddResourceModal'
 import AdminDeleteModal from '../common/AdminDeleteModal'
@@ -37,7 +37,17 @@ const CATEGORY_COLORS = {
 }
 
 export default function ResourcesPage({ activeLc = 'the-x-factors' }) {
+  const { activeLcMeta } = useLC()
   const { resources, isLoading, isSupabaseConfigured, addResource, deleteResource } = useResources(activeLc)
+
+  // Build category pills dynamically from active LC config
+  const resourceCategories = useMemo(() => {
+    const cats = activeLcMeta?.resourceCategories || []
+    return [
+      { id: 'All', label: 'All Resources', icon: '📁' },
+      ...cats.map((cat) => ({ id: cat, label: cat, icon: '📂' })),
+    ]
+  }, [activeLcMeta])
 
   const [activeCategory, setActiveCategory] = useState('All')
   const [searchQuery, setSearchQuery] = useState('')
@@ -409,6 +419,7 @@ export default function ResourcesPage({ activeLc = 'the-x-factors' }) {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onSubmit={handleAddSubmit}
+        categoryOptions={activeLcMeta?.resourceCategories || []}
       />
 
       {/* Uniform Passcode Protected Delete Modal */}

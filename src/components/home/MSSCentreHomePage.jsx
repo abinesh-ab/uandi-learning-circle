@@ -1,110 +1,209 @@
+import { useState } from 'react'
 import { useLC } from '../../context/LCContext'
-import { lcConfig, ALL_LC_SLUGS } from '../../data/lcConfig'
 import { getAssetUrl } from '../../utils/assetUrl'
+import CreateLCModal from './CreateLCModal'
 
-// Colour maps for LC cards
-const cardStyles = {
-  'the-x-factors': {
-    border: 'border-blue-300',
-    bg: 'bg-blue-50 hover:bg-blue-100',
-    badge: 'bg-brand-blue text-white',
-    glow: 'shadow-blue-200',
-    ring: 'ring-blue-300',
+const PROGRAMMES = [
+  {
+    id: 'numeracy',
+    name: 'Foundational Numeracy & Tuitions + LIFT',
+    emoji: '📐',
+    desc: 'Building strong maths foundations from primary arithmetic through 9th–12th standard board exams.',
+    color: 'blue',
+    bg: 'bg-blue-50',
+    border: 'border-blue-200',
+    badge: 'bg-brand-blue/10 text-brand-blue',
   },
-  majaraam: {
-    border: 'border-amber-300',
-    bg: 'bg-amber-50 hover:bg-amber-100',
-    badge: 'bg-amber-500 text-white',
-    glow: 'shadow-amber-200',
-    ring: 'ring-amber-300',
+  {
+    id: 'literacy',
+    name: 'Foundational Literacy',
+    emoji: '📖',
+    desc: 'Developing reading fluency, comprehension, and early literacy skills for government school students.',
+    color: 'emerald',
+    bg: 'bg-emerald-50',
+    border: 'border-emerald-200',
+    badge: 'bg-emerald-100 text-emerald-800',
   },
-  kanakkukaanumkovai: {
-    border: 'border-emerald-300',
-    bg: 'bg-emerald-50 hover:bg-emerald-100',
-    badge: 'bg-emerald-600 text-white',
-    glow: 'shadow-emerald-200',
-    ring: 'ring-emerald-300',
-  },
+]
+
+const STAT_STRIP = [
+  { emoji: '🏫', value: '8', label: 'Learning Circles', sub: 'Active squads every weekend' },
+  { emoji: '👩‍🎓', value: '50+', label: 'Students', sub: 'Children engaged across all LCs' },
+  { emoji: '🙌', value: '70+', label: 'Volunteers', sub: 'Dedicated weekly changemakers' },
+  { emoji: '📘', value: '2', label: 'Core Programmes', sub: 'Literacy & Numeracy / Tuitions' },
+]
+
+// Default colour palette for LC gateway cards (static LCs get their own, dynamic get palette)
+const DEFAULT_CARD_STYLE = { border: 'border-slate-200', bg: 'bg-slate-50 hover:bg-slate-100', badge: 'bg-slate-700 text-white', ring: 'ring-slate-300' }
+
+const STATIC_CARD_STYLES = {
+  'the-x-factors': { border: 'border-blue-300', bg: 'bg-blue-50 hover:bg-blue-100', badge: 'bg-brand-blue text-white', ring: 'ring-blue-300' },
+  majaraam: { border: 'border-amber-300', bg: 'bg-amber-50 hover:bg-amber-100', badge: 'bg-amber-500 text-white', ring: 'ring-amber-300' },
+  kanakkukaanumkovai: { border: 'border-emerald-300', bg: 'bg-emerald-50 hover:bg-emerald-100', badge: 'bg-emerald-600 text-white', ring: 'ring-emerald-300' },
 }
 
-const visionPillars = [
-  { emoji: '🌱', title: 'Grow Together', desc: 'Three Learning Circles. One shared mission — transforming young lives every Saturday.' },
-  { emoji: '🎯', title: 'Student First', desc: 'Every activity, resource, and mission is designed around the child at the centre.' },
-  { emoji: '🤝', title: 'Volunteer Driven', desc: 'Powered by passionate changemakers who show up with heart, week after week.' },
-  { emoji: '📐', title: 'Deep Learning', desc: 'Numeracy, Accountancy, and Maths — built from foundations to exam-readiness.' },
+const DYNAMIC_CARD_COLORS = [
+  { border: 'border-violet-300', bg: 'bg-violet-50 hover:bg-violet-100', badge: 'bg-violet-600 text-white', ring: 'ring-violet-300' },
+  { border: 'border-rose-300', bg: 'bg-rose-50 hover:bg-rose-100', badge: 'bg-rose-500 text-white', ring: 'ring-rose-300' },
+  { border: 'border-cyan-300', bg: 'bg-cyan-50 hover:bg-cyan-100', badge: 'bg-cyan-600 text-white', ring: 'ring-cyan-300' },
+  { border: 'border-orange-300', bg: 'bg-orange-50 hover:bg-orange-100', badge: 'bg-orange-500 text-white', ring: 'ring-orange-300' },
+  { border: 'border-indigo-300', bg: 'bg-indigo-50 hover:bg-indigo-100', badge: 'bg-indigo-600 text-white', ring: 'ring-indigo-300' },
 ]
 
 export default function MSSCentreHomePage({ showMode }) {
-  const { activeLc, setActiveLc, activeLcMeta } = useLC()
+  const { activeLc, setActiveLc, activeLcMeta, allLcConfig, allLcSlugs, dynamicRows } = useLC()
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [editingSlug, setEditingSlug] = useState(null)
 
   const handleEnterLC = (slug) => {
     setActiveLc(slug)
-    showMode('home') // keep on home, but LC context will now show X Factors home if xf
+    showMode('home')
   }
+
+  const getCardStyle = (slug, dynamicIndex) => {
+    if (STATIC_CARD_STYLES[slug]) return STATIC_CARD_STYLES[slug]
+    return DYNAMIC_CARD_COLORS[dynamicIndex % DYNAMIC_CARD_COLORS.length] || DEFAULT_CARD_STYLE
+  }
+
+  let dynamicCardIndex = 0
 
   return (
     <div className="h-full overflow-y-auto bg-slate-50">
-      {/* ── Hero ──────────────────────────────────────────── */}
-      <div className="relative w-full overflow-hidden min-h-[440px] sm:min-h-[520px] md:min-h-[580px]">
-        <img
-          src={getAssetUrl('mss-centre-hero.jpg')}
-          alt="MSS Centre"
-          className="absolute inset-0 w-full h-full object-cover object-[center_35%]"
-          onError={(e) => { e.target.style.display = 'none' }}
-        />
 
-        {/* Subtle gradient overlay to keep title readable while keeping the full photo bright and clear */}
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-slate-950/40 to-slate-950/80" />
-
-        {/* Hero content */}
-        <div className="relative z-10 flex flex-col items-center justify-center text-center px-6 py-20 sm:py-28">
-          <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-md border border-white/30 text-white text-xs font-bold px-4 py-1.5 rounded-full mb-4 shadow-lg">
-            🏛️ MSS Centre
-          </div>
-          <h1 className="text-3xl sm:text-5xl font-black text-white font-heading leading-tight mb-3 drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)]">
-            MSS Centre
-            <span className="text-amber-400"> • </span>
-            Learning Circle Hub
-          </h1>
-          <p className="text-white/90 text-sm sm:text-base font-medium max-w-lg drop-shadow-[0_2px_6px_rgba(0,0,0,0.8)]">
-            Three Learning Circles. Hundreds of students. One relentless squad of changemakers.
-          </p>
+      {/* ── Hero Photo ──────────────────────────────────────────── */}
+      <div className="w-full px-4 sm:px-6 pt-6">
+        <div className="relative w-full rounded-3xl overflow-hidden border-2 border-slate-200 shadow-xl">
+          <img
+            src={getAssetUrl('mss-centre-hero.jpg')}
+            alt="MSS Centre Team"
+            className="w-full h-[280px] sm:h-[380px] md:h-[460px] object-cover object-[center_35%]"
+            onError={(e) => { e.target.style.display = 'none' }}
+          />
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-8 space-y-10">
+      {/* ── Centre Identity (below photo) ──────────────────────── */}
+      <div className="text-center px-4 pt-6 pb-2">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-blue/10 border border-blue-200 text-brand-blue text-xs font-bold uppercase tracking-widest mb-3">
+          🏛️ MSS Centre • Coimbatore
+        </div>
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 font-heading leading-tight mb-3">
+          Where Every{' '}
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-blue to-amber-500">
+            Weekend
+          </span>{' '}
+          Changes a Life
+        </h1>
+        <p className="text-slate-500 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
+          Volunteers, educators, and changemakers uniting across 8 Learning Circles every Saturday and Sunday — building brighter futures one child at a time.
+        </p>
+      </div>
 
-        {/* ── Squad Gateway ─────────────────────────────── */}
+      <div className="max-w-5xl mx-auto px-4 py-6 space-y-10">
+
+        {/* ── Impact Metric Strip ─────────────────────────────── */}
         <section>
-          <div className="text-center mb-6">
-            <h2 className="text-xl font-black text-slate-900 font-heading">Choose Your Learning Circle</h2>
-            <p className="text-slate-500 text-sm mt-1">Enter a squad to access their Missions, Resources, and Gratitude Vault</p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {STAT_STRIP.map((stat) => (
+              <div
+                key={stat.label}
+                className="flex flex-col items-center gap-1.5 p-4 rounded-3xl bg-white border border-slate-100 shadow-sm text-center"
+              >
+                <div className="text-3xl">{stat.emoji}</div>
+                <div className="text-2xl sm:text-3xl font-black text-slate-900 font-heading leading-none">
+                  {stat.value}
+                </div>
+                <div className="text-xs font-black text-slate-700">{stat.label}</div>
+                <div className="text-[10px] text-slate-400 leading-tight">{stat.sub}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── Programme Highlights ─────────────────────────────── */}
+        <section>
+          <div className="text-center mb-5">
+            <h2 className="text-xl font-black text-slate-900 font-heading">Our Core Programmes</h2>
+            <p className="text-slate-500 text-sm mt-1">Two pathways. One shared mission of impact.</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {PROGRAMMES.map((prog) => (
+              <div
+                key={prog.id}
+                className={`flex flex-col gap-3 p-5 rounded-3xl border-2 ${prog.bg} ${prog.border} shadow-sm`}
+              >
+                <div className="text-3xl">{prog.emoji}</div>
+                <div>
+                  <div className={`inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider mb-2 ${prog.badge}`}>
+                    Programme
+                  </div>
+                  <h3 className="font-black text-slate-900 text-sm font-heading leading-tight">{prog.name}</h3>
+                  <p className="text-slate-500 text-xs mt-1 leading-relaxed">{prog.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── Explore Learning Circles Gateway ─────────────────── */}
+        <section>
+          <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
+            <div>
+              <h2 className="text-xl font-black text-slate-900 font-heading">Explore Our Learning Circles</h2>
+              <p className="text-slate-500 text-sm mt-0.5">Enter a squad to access their Missions, Resources, and Gratitude Vault</p>
+            </div>
+            {/* Hidden admin trigger — no visible label or hint */}
+            <button
+              onClick={() => { setEditingSlug(null); setIsCreateModalOpen(true) }}
+              className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-400 hover:text-slate-600 flex items-center justify-center text-sm transition-colors shrink-0"
+              aria-hidden="true"
+              tabIndex={-1}
+            >
+              +
+            </button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {ALL_LC_SLUGS.map((slug) => {
-              const lc = lcConfig[slug]
-              const style = cardStyles[slug]
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {allLcSlugs.map((slug) => {
+              const lc = allLcConfig[slug]
+              if (!lc) return null
+              const isStatic = !!STATIC_CARD_STYLES[slug]
+              const cardStyle = isStatic ? getCardStyle(slug, 0) : getCardStyle(slug, dynamicCardIndex++)
               const isActive = activeLc === slug
+              const isDynamic = lc.isDynamic
 
               return (
                 <button
                   key={slug}
                   onClick={() => handleEnterLC(slug)}
-                  className={`relative group flex flex-col items-center gap-3 p-6 rounded-3xl border-2 transition-all duration-200 text-left shadow-md hover:shadow-xl hover:-translate-y-1 ${style.bg} ${style.border} ${isActive ? `ring-2 ${style.ring}` : ''}`}
+                  className={`relative group flex flex-col items-start gap-3 p-5 rounded-3xl border-2 transition-all duration-200 text-left shadow-md hover:shadow-xl hover:-translate-y-1 ${cardStyle.bg} ${cardStyle.border} ${isActive ? `ring-2 ${cardStyle.ring}` : ''}`}
                 >
                   {isActive && (
-                    <div className={`absolute top-3 right-3 text-[10px] font-black px-2 py-0.5 rounded-full ${style.badge}`}>
+                    <div className={`absolute top-3 right-3 text-[9px] font-black px-2 py-0.5 rounded-full ${cardStyle.badge}`}>
                       ACTIVE
                     </div>
                   )}
-                  <div className="text-4xl">{lc.emoji}</div>
-                  <div>
-                    <h3 className="font-black text-slate-900 text-base font-heading leading-tight">{lc.displayName}</h3>
-                    <p className="text-slate-500 text-xs mt-1">{lc.tagline}</p>
+                  {isDynamic && !isActive && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setEditingSlug(slug); setIsCreateModalOpen(true) }}
+                      className="absolute top-3 right-3 w-6 h-6 rounded-full bg-white/60 hover:bg-white text-slate-400 hover:text-slate-600 flex items-center justify-center text-xs border border-slate-200 transition-colors"
+                      title="Edit"
+                    >
+                      ✎
+                    </button>
+                  )}
+                  <div className="text-3xl">{lc.emoji}</div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-black text-slate-900 text-sm font-heading leading-tight">{lc.displayName}</h3>
+                    <p className="text-slate-500 text-xs mt-0.5 leading-relaxed line-clamp-2">{lc.tagline}</p>
+                    {lc.programme && (
+                      <div className={`inline-flex items-center mt-2 px-2 py-0.5 rounded-full text-[9px] font-bold ${cardStyle.badge}`}>
+                        {lc.programme.length > 30 ? lc.programme.slice(0, 30) + '…' : lc.programme}
+                      </div>
+                    )}
                   </div>
-                  <div className={`mt-1 text-xs font-bold px-3 py-1 rounded-full ${style.badge}`}>
-                    {isActive ? '✓ Currently Active' : 'Enter →'}
+                  <div className={`text-xs font-black px-3 py-1.5 rounded-full self-end ${cardStyle.badge}`}>
+                    {isActive ? '✓ Active' : 'Enter →'}
                   </div>
                 </button>
               )
@@ -112,44 +211,14 @@ export default function MSSCentreHomePage({ showMode }) {
           </div>
         </section>
 
-        {/* ── Vision Pillars ────────────────────────────── */}
-        <section>
-          <h2 className="text-lg font-black text-slate-900 font-heading mb-4 text-center">Our Shared Centre Vision</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {visionPillars.map((p) => (
-              <div
-                key={p.title}
-                className="flex flex-col gap-2 p-4 rounded-2xl bg-white border border-slate-100 shadow-sm"
-              >
-                <div className="text-2xl">{p.emoji}</div>
-                <div>
-                  <div className="font-black text-slate-900 text-sm font-heading">{p.title}</div>
-                  <div className="text-slate-500 text-xs mt-0.5 leading-relaxed">{p.desc}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ── Active LC indicator ───────────────────────── */}
-        <section className="flex items-center justify-center">
-          <div className="flex flex-col items-center gap-2 p-6 rounded-3xl bg-white border border-slate-100 shadow-sm max-w-sm w-full text-center">
-            <div className="text-3xl">{activeLcMeta.emoji}</div>
-            <div className="font-black text-slate-900 font-heading text-base">
-              Currently Viewing: {activeLcMeta.displayName}
-            </div>
-            <p className="text-slate-500 text-xs">
-              Use the nav tabs above to access Resources, Gratitude Vault, and Squad Missions for this circle.
-            </p>
-            {activeLc !== 'the-x-factors' && (
-              <div className="mt-1 text-xs text-slate-400 bg-slate-50 rounded-2xl px-4 py-2 border border-slate-100">
-                💡 LC Call Decks &amp; Home page are exclusive to <strong>The X Factors</strong>
-              </div>
-            )}
-          </div>
-        </section>
-
       </div>
+
+      {/* ── Create / Edit LC Modal ─────────────────────────────── */}
+      <CreateLCModal
+        isOpen={isCreateModalOpen}
+        onClose={() => { setIsCreateModalOpen(false); setEditingSlug(null) }}
+        editSlug={editingSlug}
+      />
     </div>
   )
 }

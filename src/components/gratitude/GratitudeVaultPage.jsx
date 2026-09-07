@@ -1,9 +1,8 @@
 import { useState, useMemo, useEffect } from 'react'
 import { Heart, Sparkles, Plus, Trash2, Send, X, Lock, Filter, Check, Database, HardDrive } from 'lucide-react'
-import { lcTeams } from '../../data/teamData'
+import { useLC } from '../../context/LCContext'
 import { useGratitudeVault } from '../../hooks/useGratitudeVault'
 import AdminDeleteModal from '../common/AdminDeleteModal'
-import { lcConfig } from '../../data/lcConfig'
 
 const COLOR_MAP = {
   amber: {
@@ -46,12 +45,13 @@ const COLOR_MAP = {
 const QUICK_EMOJIS = ['🌟', '🌻', '🐝', '🚀', '❤️', '👏', '🧠', '🤝', '🔥', '💡', '👑']
 
 export default function GratitudeVaultPage({ showMode, activeLc = 'the-x-factors' }) {
+  const { allTeams, activeLcMeta } = useLC()
   const { affirmations, isLoading, isSupabaseConfigured, savedSender, addAffirmation, toggleReaction, deleteAffirmation } =
     useGratitudeVault(activeLc)
 
-  // Members for this LC
-  const lcMembers = lcTeams[activeLc] || lcTeams['the-x-factors']
-  const lcMeta = lcConfig[activeLc] || lcConfig['the-x-factors']
+  // Members for this LC (works seamlessly for static and dynamic LCs)
+  const lcMembers = useMemo(() => allTeams[activeLc] || allTeams['the-x-factors'] || [], [allTeams, activeLc])
+  const lcMeta = activeLcMeta
 
   const [selectedVolunteer, setSelectedVolunteer] = useState('ALL') // 'ALL' | volunteer name
   const [isModalOpen, setIsModalOpen] = useState(false)
