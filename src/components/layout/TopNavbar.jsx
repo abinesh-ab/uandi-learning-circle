@@ -41,7 +41,7 @@ export default function TopNavbar({ activeMode, showMode, activeDeck, switchDeck
   }
 
   return (
-    <header className="top-navbar fixed top-0 left-0 w-full z-50 px-4 py-3 flex items-center justify-between bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm transition-all duration-300">
+    <header className="top-navbar fixed top-0 left-0 w-full h-14 z-50 px-4 flex items-center justify-between bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs transition-all duration-300">
       {/* ── Brand: MSS Centre + LC Switcher ─────────────── */}
       <div className="flex items-center gap-2">
         <button

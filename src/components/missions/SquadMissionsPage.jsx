@@ -179,7 +179,7 @@ export default function SquadMissionsPage({ activeLc = 'the-x-factors' }) {
   }
 
   return (
-    <div className="relative min-h-screen pt-14 pb-20 px-4 max-w-7xl mx-auto space-y-6 animate-fade-in">
+    <div className="relative min-h-screen pt-6 sm:pt-8 pb-20 px-4 max-w-7xl mx-auto space-y-6 animate-fade-in">
       {/* Header Banner */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200/80 pb-4">
         <div>

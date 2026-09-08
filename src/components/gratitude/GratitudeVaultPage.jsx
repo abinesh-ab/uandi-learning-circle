@@ -128,7 +128,7 @@ export default function GratitudeVaultPage({ showMode, activeLc = 'the-x-factors
   }
 
   return (
-    <div className="relative min-h-screen pt-14 pb-20 px-4 max-w-7xl mx-auto space-y-6 animate-fade-in">
+    <div className="relative min-h-screen pt-6 sm:pt-8 pb-20 px-4 max-w-7xl mx-auto space-y-6 animate-fade-in">
       {/* Subtle Floating Bees & Sunflowers Background Accents */}
       <div className="absolute top-10 left-6 text-2xl opacity-25 float-anim select-none pointer-events-none" style={{ animationDelay: '0s' }}>
         🐝

@@ -176,7 +176,7 @@ export default function HomePage({ showMode }) {
   }, [activeConstellationCategory])
 
   return (
-    <div className="relative pt-16 pb-16 space-y-12 animate-fade-in">
+    <div className="relative pt-6 sm:pt-8 pb-16 space-y-10 animate-fade-in">
       {/* ────────────────────────────────────────────────────────
           1. HERO BANNER
          ──────────────────────────────────────────────────────── */}

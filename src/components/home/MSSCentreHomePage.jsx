@@ -1,7 +1,16 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useLC } from '../../context/LCContext'
 import { getAssetUrl } from '../../utils/assetUrl'
 import CreateLCModal from './CreateLCModal'
+
+// ── Configurable Image List ─────────────────────────────────────
+// Add additional centre photos to this array anytime: { url: '...', alt: '...' }
+export const CENTRE_HERO_PHOTOS = [
+  {
+    url: 'mss-centre-hero.jpg',
+    alt: 'MSS Centre Team & Students',
+  },
+]
 
 const STAT_STRIP = [
   { emoji: '🏫', value: '8', label: 'Learning Circles', sub: 'Active squads every weekend' },
@@ -24,7 +33,102 @@ const DYNAMIC_CARD_COLORS = [
   { border: 'border-indigo-300', bg: 'bg-indigo-50 hover:bg-indigo-100', badge: 'bg-indigo-600 text-white', ring: 'ring-indigo-300' },
 ]
 
-export default function MSSCentreHomePage({ showMode }) {
+// ── Hero Slideshow Component ─────────────────────────────────────
+function HeroSlideshow({ slides = CENTRE_HERO_PHOTOS }) {
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [isPaused, setIsPaused] = useState(false)
+
+  const hasMultiple = Array.isArray(slides) && slides.length > 1
+
+  // Auto-play slideshow: transitions every 4.5s when multiple photos exist and not hovered/touched
+  useEffect(() => {
+    if (!hasMultiple || isPaused) return
+
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % slides.length)
+    }, 4500)
+
+    return () => clearInterval(timer)
+  }, [hasMultiple, isPaused, slides.length])
+
+  // Boundary safety if slides change dynamically
+  useEffect(() => {
+    if (currentIndex >= slides.length) {
+      setCurrentIndex(0)
+    }
+  }, [slides.length, currentIndex])
+
+  return (
+    <div
+      className="relative w-full h-[36vh] sm:h-[40vh] md:h-[42vh] max-h-[45vh] bg-slate-900 overflow-hidden select-none group"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+      onTouchStart={() => setIsPaused(true)}
+      onTouchEnd={() => setIsPaused(false)}
+    >
+      {/* Slides with smooth cross-fade */}
+      {slides.map((slide, index) => {
+        const isActive = index === currentIndex
+        return (
+          <div
+            key={slide.url + index}
+            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+              isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
+            }`}
+          >
+            <img
+              src={getAssetUrl(slide.url)}
+              alt={slide.alt || 'MSS Centre Photo'}
+              className="w-full h-full object-cover object-[center_32%]"
+              onError={(e) => { e.target.style.display = 'none' }}
+            />
+          </div>
+        )
+      })}
+
+      {/* Discreet Indicator Dots (only rendered when >1 photo exists) */}
+      {hasMultiple && (
+        <div className="absolute bottom-3 inset-x-0 z-20 flex justify-center items-center gap-1.5 pointer-events-auto">
+          {slides.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentIndex(index)}
+              className={`transition-all duration-300 rounded-full ${
+                index === currentIndex
+                  ? 'w-6 h-1.5 bg-white shadow-md'
+                  : 'w-1.5 h-1.5 bg-white/50 hover:bg-white/90'
+              }`}
+              aria-label={`Slide ${index + 1}`}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Previous / Next Arrow Controls (visible on hover if >1 photo exists) */}
+      {hasMultiple && (
+        <>
+          <button
+            onClick={() => setCurrentIndex((prev) => (prev - 1 + slides.length) % slides.length)}
+            className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/40 hover:bg-black/70 text-white flex items-center justify-center text-lg backdrop-blur-xs opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
+            aria-label="Previous photo"
+          >
+            ‹
+          </button>
+          <button
+            onClick={() => setCurrentIndex((prev) => (prev + 1) % slides.length)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/40 hover:bg-black/70 text-white flex items-center justify-center text-lg backdrop-blur-xs opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
+            aria-label="Next photo"
+          >
+            ›
+          </button>
+        </>
+      )}
+    </div>
+  )
+}
+
+// ── Main Page Component ──────────────────────────────────────────
+export default function MSSCentreHomePage({ showMode, heroSlides = CENTRE_HERO_PHOTOS }) {
   const { activeLc, setActiveLc, allLcConfig, allLcSlugs } = useLC()
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [editingSlug, setEditingSlug] = useState(null)
@@ -48,30 +152,17 @@ export default function MSSCentreHomePage({ showMode }) {
   }
 
   return (
-    <div className="h-full overflow-y-auto bg-white">
+    <div className="w-full min-h-full bg-white">
 
-      {/* ── Full-bleed hero photo ─────────────────────────────────
-          No card. No border. No padding. Photo fills the frame.
-      ───────────────────────────────────────────────────────── */}
-      <div className="relative w-full h-[52vh] md:h-[60vh] overflow-hidden">
-        <img
-          src={getAssetUrl('mss-centre-hero.jpg')}
-          alt="MSS Centre Team"
-          className="w-full h-full object-cover object-top"
-          onError={(e) => { e.target.style.display = 'none' }}
-        />
-        {/* Top gradient — helps navbar text remain readable */}
-        <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/25 to-transparent pointer-events-none" />
-        {/* Bottom fade — dissolves into the white content below */}
-        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-white to-transparent pointer-events-none" />
-      </div>
+      {/* ── Auto-Playing Hero Slideshow (Zero dead spacing, no heavy blur wash) ── */}
+      <HeroSlideshow slides={heroSlides} />
 
-      {/* ── Content ─────────────────────────────────────────────── */}
-      <div className="max-w-5xl mx-auto px-4 -mt-8 pb-10">
+      {/* ── Clean Content Section Directly Below Image ──────────── */}
+      <div className="max-w-5xl mx-auto px-4 pt-4 sm:pt-5 pb-10">
 
         {/* Centre badge + headline + subtitle */}
-        <div className="text-center mb-5">
-          <div className="inline-flex items-center px-3 py-1 rounded-full bg-brand-blue/10 border border-blue-200 text-brand-blue text-xs font-bold uppercase tracking-widest mb-2">
+        <div className="text-center mb-4">
+          <div className="inline-flex items-center px-3 py-1 rounded-full bg-brand-blue/10 border border-blue-200 text-brand-blue text-xs font-bold uppercase tracking-widest mb-1.5">
             🏛️ MSS Centre • Coimbatore
           </div>
           <h1 className="text-2xl md:text-3xl font-black text-slate-900 font-heading leading-tight mb-1">
@@ -86,12 +177,12 @@ export default function MSSCentreHomePage({ showMode }) {
           </p>
         </div>
 
-        {/* ── Compact impact stat strip ─────────────────────────── */}
-        <div className="grid grid-cols-4 gap-2 mb-7">
+        {/* ── Compact Impact Stat Strip (Fits above the fold) ───── */}
+        <div className="grid grid-cols-4 gap-2 mb-6">
           {STAT_STRIP.map((stat) => (
             <div
               key={stat.label}
-              className="flex flex-col items-center gap-0.5 p-3 rounded-2xl bg-white border border-slate-100 shadow-sm text-center"
+              className="flex flex-col items-center gap-0.5 p-3 rounded-2xl bg-slate-50 border border-slate-100 shadow-xs text-center hover:bg-white hover:shadow-sm transition-all"
             >
               <div className="text-xl">{stat.emoji}</div>
               <div className="text-xl font-black text-slate-900 font-heading leading-none">{stat.value}</div>
@@ -100,7 +191,7 @@ export default function MSSCentreHomePage({ showMode }) {
           ))}
         </div>
 
-        {/* ── Learning Circles gateway ──────────────────────────── */}
+        {/* ── Learning Circles Gateway ──────────────────────────── */}
         <section>
           <div className="flex items-center justify-between mb-3">
             <div>
@@ -129,7 +220,7 @@ export default function MSSCentreHomePage({ showMode }) {
                 <button
                   key={slug}
                   onClick={() => handleEnterLC(slug)}
-                  className={`relative group flex flex-col items-start gap-2.5 p-4 rounded-2xl border-2 transition-all duration-200 text-left shadow-sm hover:shadow-lg hover:-translate-y-0.5 ${cardStyle.bg} ${cardStyle.border} ${isActive ? `ring-2 ${cardStyle.ring}` : ''}`}
+                  className={`relative group flex flex-col items-start gap-2.5 p-4 rounded-2xl border-2 transition-all duration-200 text-left shadow-xs hover:shadow-md hover:-translate-y-0.5 ${cardStyle.bg} ${cardStyle.border} ${isActive ? `ring-2 ${cardStyle.ring}` : ''}`}
                 >
                   {isActive ? (
                     <div className={`absolute top-2.5 right-2.5 text-[9px] font-black px-2 py-0.5 rounded-full ${cardStyle.badge}`}>
@@ -139,7 +230,7 @@ export default function MSSCentreHomePage({ showMode }) {
                     /* ✎ edit pencil — visible on hover for all LCs */
                     <button
                       onClick={(e) => openEdit(e, slug)}
-                      className="absolute top-2.5 right-2.5 w-6 h-6 rounded-full bg-white/80 hover:bg-white text-slate-400 hover:text-slate-700 flex items-center justify-center text-xs border border-slate-200 transition-all opacity-0 group-hover:opacity-100 focus:opacity-100 shadow-sm"
+                      className="absolute top-2.5 right-2.5 w-6 h-6 rounded-full bg-white/80 hover:bg-white text-slate-400 hover:text-slate-700 flex items-center justify-center text-xs border border-slate-200 transition-all opacity-0 group-hover:opacity-100 focus:opacity-100 shadow-xs"
                       aria-label={`Edit ${lc.displayName}`}
                       title="Edit"
                     >
