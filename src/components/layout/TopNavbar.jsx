@@ -59,7 +59,7 @@ export default function TopNavbar({ activeMode, showMode, activeDeck, switchDeck
           </div>
         </button>
 
-        {/* LC Switcher Pill */}
+        {/* LC Switcher Pill 
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setLcDropdownOpen((o) => !o)}
@@ -70,7 +70,7 @@ export default function TopNavbar({ activeMode, showMode, activeDeck, switchDeck
             <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${lcDropdownOpen ? 'rotate-180' : ''}`} />
           </button>
 
-          {/* Dropdown — lists ALL LCs (static + dynamic) */}
+          // Dropdown — lists ALL LCs (static + dynamic)
           {lcDropdownOpen && (
             <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-2xl border border-slate-200 shadow-2xl overflow-hidden z-[9999] animate-fade-in">
               <div className="px-4 py-3 border-b border-slate-100">
@@ -101,7 +101,7 @@ export default function TopNavbar({ activeMode, showMode, activeDeck, switchDeck
               </div>
             </div>
           )}
-        </div>
+        </div>*/}
       </div>
 
       {/* ── Global Nav ──────────────────────────────────── */}

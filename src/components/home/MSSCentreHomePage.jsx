@@ -59,8 +59,9 @@ function HeroSlideshow({ slides = CENTRE_HERO_PHOTOS }) {
   }, [slides.length, currentIndex])
 
   return (
-    <div
-      className="relative w-full h-[36vh] sm:h-[40vh] md:h-[42vh] max-h-[45vh] bg-slate-900 overflow-hidden select-none group"
+   // AFTER:
+   <div
+      className="relative w-full h-[62vh] sm:h-[66vh] md:h-[70vh] max-h-[75vh] bg-slate-900 overflow-hidden select-none group"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       onTouchStart={() => setIsPaused(true)}
@@ -79,7 +80,7 @@ function HeroSlideshow({ slides = CENTRE_HERO_PHOTOS }) {
             <img
               src={getAssetUrl(slide.url)}
               alt={slide.alt || 'MSS Centre Photo'}
-              className="w-full h-full object-cover object-[center_32%]"
+              className="w-full h-full object-cover object-[center_48%]"
               onError={(e) => { e.target.style.display = 'none' }}
             />
           </div>
