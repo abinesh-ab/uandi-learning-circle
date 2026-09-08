@@ -68,38 +68,38 @@ export default function MSSCentreHomePage({ showMode }) {
   let dynamicCardIndex = 0
 
   return (
-    <div className="h-full overflow-y-auto bg-slate-50">
+    <div className="h-full overflow-y-auto bg-slate-50 pt-16 md:pt-20">
 
       {/* ── Hero Photo ──────────────────────────────────────────── */}
-      <div className="w-full px-4 sm:px-6 pt-6">
-        <div className="relative w-full rounded-3xl overflow-hidden border-2 border-slate-200 shadow-xl">
+      <div className="w-full px-4 sm:px-6 mt-0">
+        <div className="relative w-full bg-white p-1.5 sm:p-2 rounded-2xl md:rounded-3xl border border-slate-200 shadow-md mx-auto max-w-7xl">
           <img
             src={getAssetUrl('mss-centre-hero.jpg')}
             alt="MSS Centre Team"
-            className="w-full h-[280px] sm:h-[380px] md:h-[460px] object-cover object-[center_35%]"
+            className="w-full max-h-[38vh] md:max-h-[42vh] object-cover object-top rounded-xl md:rounded-2xl"
             onError={(e) => { e.target.style.display = 'none' }}
           />
         </div>
       </div>
 
       {/* ── Centre Identity (below photo) ──────────────────────── */}
-      <div className="text-center px-4 pt-6 pb-2">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-blue/10 border border-blue-200 text-brand-blue text-xs font-bold uppercase tracking-widest mb-3">
+      <div className="text-center px-4 mt-3">
+        <div className="inline-flex items-center px-3 py-1 rounded-full bg-brand-blue/10 border border-blue-200 text-brand-blue text-xs font-bold uppercase tracking-widest mb-2">
           🏛️ MSS Centre • Coimbatore
         </div>
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 font-heading leading-tight mb-3">
+        <h1 className="text-2xl md:text-3xl font-black text-slate-900 font-heading leading-tight mt-1 mb-2">
           Where Every{' '}
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-blue to-amber-500">
             Weekend
           </span>{' '}
           Changes a Life
         </h1>
-        <p className="text-slate-500 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
+        <p className="text-slate-500 text-xs sm:text-sm max-w-2xl mx-auto leading-relaxed">
           Volunteers, educators, and changemakers uniting across 8 Learning Circles every Saturday and Sunday — building brighter futures one child at a time.
         </p>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 py-6 space-y-10">
+      <div className="max-w-5xl mx-auto px-4 py-4 space-y-8">
 
         {/* ── Impact Metric Strip ─────────────────────────────── */}
         <section>

@@ -176,13 +176,13 @@ export default function HomePage({ showMode }) {
   }, [activeConstellationCategory])
 
   return (
-    <div className="relative pt-20 pb-28 space-y-16 animate-fade-in">
+    <div className="relative pt-16 pb-16 space-y-12 animate-fade-in">
       {/* ────────────────────────────────────────────────────────
           1. HERO BANNER
          ──────────────────────────────────────────────────────── */}
       <section className="w-full max-w-7xl mx-auto px-4 sm:px-6">
         <div
-          className="p-8 sm:p-14 rounded-[2.5rem] border border-slate-700/50 text-white text-center shadow-2xl relative overflow-hidden flex flex-col items-center justify-start min-h-[480px] sm:min-h-[540px]"
+          className="p-8 sm:p-14 rounded-[2.5rem] border border-slate-700/50 text-white text-center shadow-2xl relative overflow-hidden flex flex-col items-center justify-start min-h-[400px] sm:min-h-[460px]"
           style={{
             backgroundImage: `url(${getAssetUrl('hero-home.png')})`,
             backgroundSize: 'cover',
