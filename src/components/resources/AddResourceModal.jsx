@@ -32,7 +32,7 @@ export default function AddResourceModal({ isOpen, onClose, onSubmit, categoryOp
   useEffect(() => {
     if (isOpen) {
       setTitle('')
-      setCategory('9th Maths')
+      setCategory(CATEGORY_OPTIONS[0] || '9th Maths')
       setGrade('General')
       setDescription('')
       setFileUrl('')
@@ -44,7 +44,16 @@ export default function AddResourceModal({ isOpen, onClose, onSubmit, categoryOp
     }
   }, [isOpen])
 
+  // Escape key closes modal
+  useEffect(() => {
+    if (!isOpen) return
+    const handler = (e) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [isOpen, onClose])
+
   if (!isOpen) return null
+
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -81,30 +90,46 @@ export default function AddResourceModal({ isOpen, onClose, onSubmit, categoryOp
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in">
+    /* Backdrop — closes on click */
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-950/65 backdrop-blur-sm animate-fade-in"
+      onClick={onClose}
+    >
+      {/* Modal card — stops click propagation */}
       <div
-        className={`bg-white rounded-3xl border border-slate-200 shadow-2xl p-6 sm:p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto space-y-6 relative transition-transform ${
+        className={`bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl border border-slate-200 shadow-2xl max-h-[92vh] flex flex-col transition-transform ${
           isShaking ? 'animate-shake' : ''
         }`}
+        onClick={(e) => e.stopPropagation()}
       >
-        <button
-          onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
-        >
-          <X className="w-5 h-5" />
-        </button>
-
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-brand-blue/10 text-brand-blue flex items-center justify-center font-bold shadow-xs">
-            <Plus className="w-6 h-6" />
-          </div>
-          <div>
-            <h3 className="text-xl font-black text-slate-900 font-heading">Add New Resource</h3>
-            <p className="text-xs text-slate-500">Publish academic materials to the Resource Hub.</p>
-          </div>
+        {/* Drag handle (mobile only) */}
+        <div className="flex justify-center pt-3 pb-0 sm:hidden">
+          <div className="w-10 h-1 rounded-full bg-slate-300" />
         </div>
 
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-brand-blue/10 text-brand-blue flex items-center justify-center">
+              <Plus className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-base font-black text-slate-900 font-heading">Add New Resource</h3>
+              <p className="text-[10px] text-slate-400">Publish academic materials to the Resource Hub.</p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-9 h-9 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Scrollable form body */}
+        <div className="overflow-y-auto flex-1 px-6 py-5">
         <form onSubmit={handleSubmit} className="space-y-4 text-left">
+
           {/* Title */}
           <div className="space-y-1">
             <label className="text-xs font-bold text-slate-700">Resource Title *</label>
@@ -216,19 +241,20 @@ export default function AddResourceModal({ isOpen, onClose, onSubmit, categoryOp
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors"
+              className="flex-1 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors min-h-[48px]"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 py-3 rounded-2xl bg-brand-blue hover:bg-blue-700 text-white text-xs font-bold shadow-lg shadow-blue-500/25 transition-all hover:scale-[1.02]"
+              className="flex-1 py-3 rounded-2xl bg-brand-blue hover:bg-blue-700 text-white text-xs font-bold shadow-lg shadow-blue-500/25 transition-all hover:scale-[1.02] min-h-[48px]"
             >
               Save Resource
             </button>
           </div>
         </form>
-      </div>
-    </div>
+        </div>{/* end scrollable body */}
+      </div>{/* end modal card */}
+    </div>/* end backdrop */
   )
 }

@@ -64,6 +64,14 @@ export default function SquadMissionsPage({ activeLc = 'the-x-factors' }) {
     setCategory(missionCategories[0] || 'Student Log')
   }, [activeLc, teamMembers, missionCategories])
 
+  // Escape key closes the add mission modal
+  useEffect(() => {
+    if (!isAddModalOpen) return
+    const handler = (e) => { if (e.key === 'Escape') { setIsAddModalOpen(false); setFormError('') } }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [isAddModalOpen])
+
   // Calculate stats per volunteer (Handles 0 tasks gracefully as 100% / All caught up!)
   const volunteerStats = useMemo(() => {
     const stats = {}
@@ -507,14 +515,26 @@ export default function SquadMissionsPage({ activeLc = 'the-x-factors' }) {
 
       {/* Add Mission Modal */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in">
-          <div className="glass-card max-w-lg w-full p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-2xl bg-white space-y-6 relative max-h-[90vh] overflow-y-auto">
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-950/70 backdrop-blur-sm animate-fade-in"
+          onClick={() => { setIsAddModalOpen(false); setFormError('') }}
+        >
+          <div
+            className="glass-card w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl border border-slate-200 shadow-2xl bg-white max-h-[92vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Drag handle (mobile) */}
+            <div className="flex justify-center pt-3 sm:hidden">
+              <div className="w-10 h-1 rounded-full bg-slate-300" />
+            </div>
+
+            <div className="p-6 sm:p-8 space-y-6">
             <button
               onClick={() => {
                 setIsAddModalOpen(false)
                 setFormError('')
               }}
-              className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 p-1.5 rounded-full hover:bg-slate-100"
+              className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 p-1.5 rounded-full hover:bg-slate-100 min-h-[44px] min-w-[44px] flex items-center justify-center"
             >
               <X className="w-5 h-5" />
             </button>
@@ -642,13 +662,14 @@ export default function SquadMissionsPage({ activeLc = 'the-x-factors' }) {
               <div className="pt-2">
                 <button
                   type="submit"
-                  className="w-full py-4 bg-brand-blue hover:bg-blue-700 text-white font-black text-sm rounded-2xl shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2 hover:scale-[1.02] transition-all"
+                  className="w-full py-4 bg-brand-blue hover:bg-blue-700 text-white font-black text-sm rounded-2xl shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2 hover:scale-[1.02] transition-all min-h-[48px]"
                 >
                   <Plus className="w-4 h-4" />
                   <span>{isBroadcast ? `Broadcast Mission to All ${teamMembers.length} Rows 🚀` : 'Assign Mission'}</span>
                 </button>
               </div>
             </form>
+            </div>{/* end p-6 inner wrapper */}
           </div>
         </div>
       )}

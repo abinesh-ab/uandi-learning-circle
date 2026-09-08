@@ -72,6 +72,14 @@ export default function GratitudeVaultPage({ showMode, activeLc = 'the-x-factors
     setRecipient(lcMembers[0]?.name || '')
   }, [activeLc, lcMembers])
 
+  // Escape key closes the affirmation modal
+  useEffect(() => {
+    if (!isModalOpen) return
+    const handler = (e) => { if (e.key === 'Escape') setIsModalOpen(false) }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [isModalOpen])
+
   // Volunteers List — filtered to active LC's team
   const volunteerNames = useMemo(() => {
     const names = lcMembers.map((m) => m.name)
@@ -357,16 +365,28 @@ export default function GratitudeVaultPage({ showMode, activeLc = 'the-x-factors
 
       {/* Give Affirmation Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in">
-          <div className="glass-card max-w-lg w-full p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-2xl bg-white space-y-5 relative max-h-[90vh] overflow-y-auto">
-            <button
-              onClick={() => setIsModalOpen(false)}
-              className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 p-1.5 rounded-full hover:bg-slate-100 transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-950/70 backdrop-blur-sm animate-fade-in"
+          onClick={() => setIsModalOpen(false)}
+        >
+          <div
+            className="glass-card w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl border border-slate-200 shadow-2xl bg-white space-y-5 relative max-h-[92vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Drag handle (mobile only) */}
+            <div className="flex justify-center pt-3 sm:hidden">
+              <div className="w-10 h-1 rounded-full bg-slate-300" />
+            </div>
+            <div className="px-6 pt-3 pb-0 flex justify-end">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="text-slate-400 hover:text-slate-700 p-1.5 rounded-full hover:bg-slate-100 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-            <div className="space-y-1">
+            <div className="px-6 -mt-2 space-y-1">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 text-rose-700 text-xs font-bold uppercase tracking-wider">
                 <Sparkles className="w-3.5 h-3.5 text-rose-500" /> Share Kudos 🐝 🌻
               </div>
@@ -374,6 +394,7 @@ export default function GratitudeVaultPage({ showMode, activeLc = 'the-x-factors
               <p className="text-xs text-slate-500">Post a warm note of appreciation to inspire your fellow volunteer.</p>
             </div>
 
+            <div className="px-6 pb-6">
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Target Volunteer */}
               <div className="space-y-1.5">
@@ -381,7 +402,7 @@ export default function GratitudeVaultPage({ showMode, activeLc = 'the-x-factors
                 <select
                   value={recipient}
                   onChange={(e) => setRecipient(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-2xl text-xs font-bold text-slate-900 focus:outline-none focus:border-brand-blue"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-2xl text-xs font-bold text-slate-900 focus:outline-none focus:border-brand-blue min-h-[44px]"
                 >
                   {volunteerNames.map((name) => (
                     <option key={name} value={name}>
@@ -405,7 +426,7 @@ export default function GratitudeVaultPage({ showMode, activeLc = 'the-x-factors
                       key={emoji}
                       type="button"
                       onClick={() => setMessage((prev) => prev + emoji)}
-                      className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-sm transition-transform active:scale-125"
+                      className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-sm transition-transform active:scale-125 min-h-[36px] min-w-[36px]"
                     >
                       {emoji}
                     </button>
@@ -431,7 +452,7 @@ export default function GratitudeVaultPage({ showMode, activeLc = 'the-x-factors
                   placeholder="Enter your name... (e.g. Aravinth)"
                   value={sender}
                   onChange={(e) => setSender(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-2xl text-xs font-bold text-slate-900 focus:outline-none focus:border-brand-blue"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-2xl text-xs font-bold text-slate-900 focus:outline-none focus:border-brand-blue min-h-[44px]"
                 />
               </div>
 
@@ -448,7 +469,7 @@ export default function GratitudeVaultPage({ showMode, activeLc = 'the-x-factors
                         key={color}
                         type="button"
                         onClick={() => setSelectedColor(color)}
-                        className={`w-8 h-8 rounded-full ${theme.bg} border-2 ${
+                        className={`w-9 h-9 rounded-full ${theme.bg} border-2 ${
                           isSelected ? 'border-slate-900 scale-110 shadow-md' : 'border-slate-300'
                         } flex items-center justify-center transition-transform`}
                       >
@@ -463,13 +484,14 @@ export default function GratitudeVaultPage({ showMode, activeLc = 'the-x-factors
               <div className="pt-2">
                 <button
                   type="submit"
-                  className="w-full py-4 bg-rose-500 hover:bg-rose-600 text-white font-black text-sm rounded-2xl shadow-lg shadow-rose-500/25 flex items-center justify-center gap-2 hover:scale-[1.02] transition-all"
+                  className="w-full py-4 bg-rose-500 hover:bg-rose-600 text-white font-black text-sm rounded-2xl shadow-lg shadow-rose-500/25 flex items-center justify-center gap-2 hover:scale-[1.02] transition-all min-h-[48px]"
                 >
                   <Send className="w-4 h-4" />
                   <span>Post Affirmation to Vault ✨</span>
                 </button>
               </div>
             </form>
+            </div>
           </div>
         </div>
       )}

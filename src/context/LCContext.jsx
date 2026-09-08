@@ -1,10 +1,35 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react'
-import { resolveLcSlug, lcConfig as staticLcConfig, ALL_LC_SLUGS as STATIC_ALL_SLUGS } from '../data/lcConfig'
+import {
+  resolveLcSlug,
+  lcConfig as staticLcConfig,
+  ALL_LC_SLUGS as STATIC_ALL_SLUGS,
+  STATIC_LC_SLUGS,
+} from '../data/lcConfig'
 import { STATIC_TEAMS } from '../data/teamData'
 import { useDynamicLCs } from '../hooks/useDynamicLCs'
 
 const LCContext = createContext(null)
 
+// ── LocalStorage helpers for static LC overrides ────────────────
+const STATIC_OVERRIDE_KEY = 'mss_static_lc_overrides'
+const OVERRIDE_EVENT = 'mss_lc_override_updated'
+
+function readStaticOverrides() {
+  try {
+    const raw = localStorage.getItem(STATIC_OVERRIDE_KEY)
+    return raw ? JSON.parse(raw) : {}
+  } catch {
+    return {}
+  }
+}
+
+function saveStaticOverrides(overrides) {
+  try {
+    localStorage.setItem(STATIC_OVERRIDE_KEY, JSON.stringify(overrides))
+  } catch {}
+}
+
+// ── URL sync helpers ─────────────────────────────────────────────
 function readLcFromURL() {
   try {
     const params = new URLSearchParams(window.location.search)
@@ -22,8 +47,56 @@ function writeLcToURL(slug) {
   } catch {}
 }
 
+// ── Build merged static config with overrides applied ───────────
+function buildMergedStaticConfig(overrides) {
+  const merged = {}
+  STATIC_LC_SLUGS.forEach((slug) => {
+    const base = staticLcConfig[slug]
+    const override = overrides[slug] || {}
+    merged[slug] = {
+      ...base,
+      ...override,
+      // Always preserve identity fields from base for static LCs
+      slug: base.slug,
+      enablePasscode: override.enablePasscode || base.enablePasscode,
+      deletePasscode: override.deletePasscode || base.deletePasscode,
+      hasDecks: base.hasDecks,
+      hasOwnHome: base.hasOwnHome,
+      isStatic: true,
+    }
+  })
+  return merged
+}
+
+// ── Build merged static teams with overrides applied ────────────
+function buildMergedStaticTeams(overrides) {
+  const merged = { ...STATIC_TEAMS }
+  STATIC_LC_SLUGS.forEach((slug) => {
+    const teamOverride = overrides[slug]?.team_data
+    if (Array.isArray(teamOverride) && teamOverride.length > 0) {
+      // Convert stored team_data format to teamData.js format
+      merged[slug] = teamOverride.map((m, i) => ({
+        id: m.id || `${slug}-m${i}`,
+        name: m.name || '',
+        role: m.role || '100% Changemaker',
+        focus: m.specialty || 'Learning Circle',
+        desc: m.desc || `Bringing energy and dedication to every session.`,
+        avatarColor: `from-slate-500 to-slate-700`,
+        avatarText: m.avatarText || (m.name ? m.name.slice(0, 2).toUpperCase() : '??'),
+        photo: m.photo || '',
+        specialty: m.specialty || 'Changemaker',
+        emoji: m.emoji || '🌟',
+      }))
+    }
+  })
+  return merged
+}
+
+// ── Provider ─────────────────────────────────────────────────────
 export function LCProvider({ children }) {
   const [activeLcRaw, setActiveLcRaw] = useState(() => readLcFromURL())
+  const [staticOverrides, setStaticOverrides] = useState(() => readStaticOverrides())
+
   const {
     dynamicLcConfig,
     dynamicTeams,
@@ -33,19 +106,38 @@ export function LCProvider({ children }) {
     updateDynamicLC,
   } = useDynamicLCs()
 
-  // Merged LC config: static entries always take priority over dynamic
+  // Listen for override updates (from CreateLCModal saving static edits)
+  useEffect(() => {
+    const handler = () => setStaticOverrides(readStaticOverrides())
+    window.addEventListener(OVERRIDE_EVENT, handler)
+    return () => window.removeEventListener(OVERRIDE_EVENT, handler)
+  }, [])
+
+  // Merged static config (base + overrides)
+  const mergedStaticConfig = useMemo(
+    () => buildMergedStaticConfig(staticOverrides),
+    [staticOverrides]
+  )
+
+  // Merged static teams (base + overrides)
+  const mergedStaticTeams = useMemo(
+    () => buildMergedStaticTeams(staticOverrides),
+    [staticOverrides]
+  )
+
+  // All LC config: dynamic < mergedStatic (static always wins slug conflicts)
   const allLcConfig = useMemo(
-    () => ({ ...dynamicLcConfig, ...staticLcConfig }),
-    [dynamicLcConfig]
+    () => ({ ...dynamicLcConfig, ...mergedStaticConfig }),
+    [dynamicLcConfig, mergedStaticConfig]
   )
 
-  // Merged teams: static always wins
+  // All teams: dynamic < mergedStatic
   const allTeams = useMemo(
-    () => ({ ...dynamicTeams, ...STATIC_TEAMS }),
-    [dynamicTeams]
+    () => ({ ...dynamicTeams, ...mergedStaticTeams }),
+    [dynamicTeams, mergedStaticTeams]
   )
 
-  // Merged slug list: static first, then dynamic (deduped)
+  // All slugs: static first, then dynamic
   const allLcSlugs = useMemo(() => {
     const dynamicSlugs = Object.keys(dynamicLcConfig)
     return [...STATIC_ALL_SLUGS, ...dynamicSlugs]
@@ -53,7 +145,6 @@ export function LCProvider({ children }) {
 
   const allValidSlugs = useMemo(() => new Set(allLcSlugs), [allLcSlugs])
 
-  // Resolve activeLc — falls back to the-x-factors if slug not yet in merged list
   const activeLc = useMemo(
     () => resolveLcSlug(activeLcRaw, allValidSlugs),
     [activeLcRaw, allValidSlugs]
@@ -64,14 +155,13 @@ export function LCProvider({ children }) {
     writeLcToURL(slug)
   }, [])
 
-  // Keep URL in sync whenever activeLc changes
   useEffect(() => {
     writeLcToURL(activeLc)
   }, [activeLc])
 
   const activeLcMeta = allLcConfig[activeLc] || staticLcConfig['the-x-factors']
 
-  // Passcode validators for the currently active LC
+  // Passcode validators for the active LC
   const validateEnablePasscode = useCallback(
     (passcode) => {
       const clean = (passcode || '').trim().toLowerCase()
@@ -88,6 +178,17 @@ export function LCProvider({ children }) {
     [activeLcMeta]
   )
 
+  // ── Save an override for a STATIC LC ───────────────────────────
+  const updateStaticLcOverride = useCallback((slug, overrideData) => {
+    if (!STATIC_LC_SLUGS.includes(slug)) return
+    const current = readStaticOverrides()
+    const updated = { ...current, [slug]: { ...(current[slug] || {}), ...overrideData } }
+    saveStaticOverrides(updated)
+    setStaticOverrides(updated)
+    // Notify other components (e.g., if multiple hooks listen)
+    window.dispatchEvent(new CustomEvent(OVERRIDE_EVENT))
+  }, [])
+
   const contextValue = useMemo(
     () => ({
       activeLc,
@@ -100,8 +201,10 @@ export function LCProvider({ children }) {
       dynamicLoading,
       addDynamicLC,
       updateDynamicLC,
+      updateStaticLcOverride,
       validateEnablePasscode,
       validateDeletePasscode,
+      staticOverrides,
       // Backward-compat aliases
       lcConfig: allLcConfig,
       ALL_LC_SLUGS: allLcSlugs,
@@ -117,8 +220,10 @@ export function LCProvider({ children }) {
       dynamicLoading,
       addDynamicLC,
       updateDynamicLC,
+      updateStaticLcOverride,
       validateEnablePasscode,
       validateDeletePasscode,
+      staticOverrides,
     ]
   )
 
