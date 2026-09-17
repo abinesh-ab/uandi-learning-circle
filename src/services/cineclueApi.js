@@ -4,10 +4,20 @@ const TABLE = 'cineclue_puzzles'
 const BUCKET = 'cineclue-images'
 const LS_KEY = 'mss_cineclue_puzzles'
 
-// ── Default seed puzzles (auto-loaded on first run) ──────────────
+// ── UUID validation helper ────────────────────────────────────────
+function isValidUUID(str) {
+  if (typeof str !== 'string') return false
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str)
+}
+
+function safeUUID(id) {
+  return isValidUUID(id) ? id : crypto.randomUUID()
+}
+
+// ── Default seed puzzles (valid UUIDs) ───────────────────────────
 const SEED_PUZZLES = [
   {
-    id: 'seed-cineclue-1',
+    id: '11111111-1111-4111-8111-111111111001',
     title: 'Kollywood Classic #1',
     category: 'Movie',
     hint: 'Two brothers. One mission. Old school action.',
@@ -41,11 +51,27 @@ const SEED_PUZZLES = [
   },
 ]
 
-// ── LocalStorage helpers ─────────────────────────────────────────
+// ── LocalStorage helpers with automatic UUID sanitization ────────
+function sanitizePuzzles(list) {
+  if (!Array.isArray(list)) return []
+  return list.map((p) => {
+    const validId = safeUUID(p?.id)
+    return {
+      ...p,
+      id: validId,
+    }
+  })
+}
+
 function getLocal() {
   try {
     const saved = localStorage.getItem(LS_KEY)
-    return saved ? JSON.parse(saved) : null
+    if (!saved) return null
+    const parsed = JSON.parse(saved)
+    const sanitized = sanitizePuzzles(parsed)
+    // persist back sanitized list to prevent legacy string IDs
+    localStorage.setItem(LS_KEY, JSON.stringify(sanitized))
+    return sanitized
   } catch {
     return null
   }
@@ -53,7 +79,8 @@ function getLocal() {
 
 function setLocal(data) {
   try {
-    localStorage.setItem(LS_KEY, JSON.stringify(data))
+    const sanitized = sanitizePuzzles(data)
+    localStorage.setItem(LS_KEY, JSON.stringify(sanitized))
   } catch {}
 }
 
@@ -131,7 +158,16 @@ export async function compressAndUploadImage(file, pathPrefix = 'puzzles') {
         upsert: false,
       })
 
-    if (uploadError) return { url: null, error: uploadError.message }
+    if (uploadError) {
+      console.warn('[CineClue Storage] Upload error, falling back to base64:', uploadError.message)
+      // Fall back to base64 if bucket doesn't exist yet so user isn't blocked
+      return new Promise((resolve) => {
+        const reader = new FileReader()
+        reader.onload = (e) => resolve({ url: e.target.result, error: null })
+        reader.onerror = () => resolve({ url: null, error: 'FileReader fallback failed' })
+        reader.readAsDataURL(compressed)
+      })
+    }
 
     const { data: urlData } = supabase.storage.from(BUCKET).getPublicUrl(filename)
     return { url: urlData.publicUrl, error: null }
@@ -179,39 +215,58 @@ export async function fetchCinecluePuzzles() {
 }
 
 export async function createCinecluePuzzle(puzzle) {
+  const validId = safeUUID(puzzle.id)
   const row = {
     ...puzzle,
-    id: puzzle.id || crypto.randomUUID(),
-    created_at: new Date().toISOString(),
+    id: validId,
+    created_at: puzzle.created_at || new Date().toISOString(),
   }
 
   // Always save locally first
   const local = getLocal() || []
-  setLocal([...local.filter((r) => r.id !== row.id), row])
+  setLocal([...local.filter((r) => r.id !== row.id && r.id !== puzzle.id), row])
 
   if (!isSupabaseConfigured) return { success: true, row }
 
   try {
-    const { error } = await supabase.from(TABLE).insert(row)
+    const { data, error } = await supabase
+      .from(TABLE)
+      .upsert(row)
+      .select()
+      .single()
+
     if (error) throw error
-    return { success: true, row }
+    return { success: true, row: data || row }
   } catch (err) {
+    console.error('[CineClue] create error:', err)
     return { success: false, error: err.message }
   }
 }
 
 export async function updateCinecluePuzzle(id, updates) {
+  const validId = safeUUID(id)
   const local = getLocal() || []
-  const updated = local.map((r) => (r.id === id ? { ...r, ...updates } : r))
-  setLocal(updated)
+  const existing = local.find((r) => r.id === id || r.id === validId) || {}
+  const merged = { ...existing, ...updates, id: validId }
 
-  if (!isSupabaseConfigured) return { success: true }
+  // Update in local
+  const updatedLocal = local.filter((r) => r.id !== id && r.id !== validId)
+  updatedLocal.push(merged)
+  setLocal(updatedLocal)
+
+  if (!isSupabaseConfigured) return { success: true, row: merged }
 
   try {
-    const { error } = await supabase.from(TABLE).update(updates).eq('id', id)
+    const { data, error } = await supabase
+      .from(TABLE)
+      .upsert(merged)
+      .select()
+      .single()
+
     if (error) throw error
-    return { success: true }
+    return { success: true, row: data || merged }
   } catch (err) {
+    console.error('[CineClue] update error:', err)
     return { success: false, error: err.message }
   }
 }
@@ -223,10 +278,13 @@ export async function deleteCinecluePuzzle(id) {
   if (!isSupabaseConfigured) return { success: true }
 
   try {
-    const { error } = await supabase.from(TABLE).delete().eq('id', id)
-    if (error) throw error
+    if (isValidUUID(id)) {
+      const { error } = await supabase.from(TABLE).delete().eq('id', id)
+      if (error) throw error
+    }
     return { success: true }
   } catch (err) {
+    console.error('[CineClue] delete error:', err)
     return { success: false, error: err.message }
   }
 }

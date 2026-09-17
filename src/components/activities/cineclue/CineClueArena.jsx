@@ -203,36 +203,26 @@ export default function CineClueArena() {
 
   if (view === 'play') {
     return (
-      <div className="rounded-3xl overflow-hidden border border-slate-200 shadow-xl" style={{ height: '70vh' }}>
-        <CineCluePlayView
-          puzzle={cc.activePuzzle}
-          activePuzzleIndex={cc.activePuzzleIndex}
-          totalPuzzles={cc.puzzles.length}
-          onBack={() => setView('lobby')}
-          onNextPuzzle={cc.nextPuzzle}
-          onPrevPuzzle={cc.prevPuzzle}
-          onGoToPuzzle={cc.goToPuzzle}
-          // Reveal
-          revealedCount={cc.revealedCount}
-          showHint={cc.showHint}
-          showAnswer={cc.showAnswer}
-          onRevealNext={cc.revealNextClue}
-          onRevealAll={cc.revealAllClues}
-          onToggleHint={cc.toggleHint}
-          onRevealAnswer={cc.revealAnswer}
-          onHideAnswer={cc.hideAnswer}
-          // Timer
-          timerDuration={cc.timerDuration}
-          timerRemaining={cc.timerRemaining}
-          timerRunning={cc.timerRunning}
-          onStartTimer={cc.startTimer}
-          onPauseTimer={cc.pauseTimer}
-          onResetTimer={cc.resetTimer}
-          onChangeTimerDuration={cc.changeTimerDuration}
-        />
-      </div>
+      <CineCluePlayView
+        puzzle={cc.activePuzzle}
+        activePuzzleIndex={cc.activePuzzleIndex}
+        totalPuzzles={cc.puzzles.length}
+        onBack={() => setView('lobby')}
+        onNextPuzzle={cc.nextPuzzle}
+        onPrevPuzzle={cc.prevPuzzle}
+        onGoToPuzzle={cc.goToPuzzle}
+        // Timer
+        timerDuration={cc.timerDuration}
+        timerRemaining={cc.timerRemaining}
+        timerRunning={cc.timerRunning}
+        onStartTimer={cc.startTimer}
+        onPauseTimer={cc.pauseTimer}
+        onResetTimer={cc.resetTimer}
+        onChangeTimerDuration={cc.changeTimerDuration}
+      />
     )
   }
+
 
   return (
     <>

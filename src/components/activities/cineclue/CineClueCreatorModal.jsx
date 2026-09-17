@@ -190,7 +190,7 @@ function ClueRow({ clue, index, total, onChange, onRemove, onMoveUp, onMoveDown 
 }
 
 // ── Puzzle Form ──────────────────────────────────────────────────
-function PuzzleForm({ initial, onSave, onCancel, isSaving }) {
+function PuzzleForm({ initial, onSave, onCancel, isSaving, saveError }) {
   const [form, setForm] = useState(
     initial || { ...BLANK_PUZZLE, clues: [{ ...BLANK_CLUE }] }
   )
@@ -344,6 +344,12 @@ function PuzzleForm({ initial, onSave, onCancel, isSaving }) {
         </div>
       </div>
 
+      {saveError && (
+        <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold animate-shake">
+          ⚠️ {saveError}
+        </div>
+      )}
+
       {/* Actions */}
       <div className="flex gap-3 pt-2 border-t border-slate-100">
         <button
@@ -379,12 +385,14 @@ export default function CineClueCreatorModal({
   const [view, setView] = useState('list') // 'list' | 'create' | 'edit'
   const [editingPuzzle, setEditingPuzzle] = useState(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
   const [deleteConfirm, setDeleteConfirm] = useState(null)
 
   if (!isOpen) return null
 
   const handleSave = async (formData) => {
     setIsSaving(true)
+    setSaveError('')
     let res
     if (view === 'edit' && editingPuzzle) {
       res = await onEdit(editingPuzzle.id, formData)
@@ -395,11 +403,15 @@ export default function CineClueCreatorModal({
     if (res?.success !== false) {
       setView('list')
       setEditingPuzzle(null)
+      setSaveError('')
+    } else {
+      setSaveError(res?.error || 'Failed to save puzzle. Please check all fields.')
     }
   }
 
   const startEdit = (puzzle) => {
     setEditingPuzzle(puzzle)
+    setSaveError('')
     setView('edit')
   }
 
@@ -547,9 +559,11 @@ export default function CineClueCreatorModal({
             <PuzzleForm
               initial={view === 'edit' ? editingPuzzle : null}
               onSave={handleSave}
-              onCancel={() => { setView('list'); setEditingPuzzle(null) }}
+              onCancel={() => { setView('list'); setEditingPuzzle(null); setSaveError('') }}
               isSaving={isSaving}
+              saveError={saveError}
             />
+
           )}
         </div>
       </div>
