@@ -73,8 +73,8 @@ function TimerPill({ remaining, duration, running, onStart, onPause, onReset, on
       </div>
 
       {/* Quick duration presets */}
-      <div className="hidden sm:flex items-center gap-0.5 pl-1 border-l border-slate-700">
-        {[30, 45, 60].map((d) => (
+      <div className="flex items-center gap-0.5 pl-1 border-l border-slate-700">
+        {[10, 15, 30, 45, 60].map((d) => (
           <button
             key={d}
             onClick={() => onChangeDuration(d)}
@@ -89,6 +89,7 @@ function TimerPill({ remaining, duration, running, onStart, onPause, onReset, on
     </div>
   )
 }
+
 
 // ── Main Presenter Play View (One Clue Slide at a Time) ──────────
 export default function CineCluePlayView({
@@ -113,29 +114,54 @@ export default function CineCluePlayView({
   const [showHint, setShowHint] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const containerRef = useRef(null)
-  const didConfetti = useRef(false)
+  const canvasRef = useRef(null)
+  const confettiInstanceRef = useRef(null)
 
   const clues = puzzle?.clues || []
   const totalClues = clues.length
   const isAnswerSlide = activeSlide === 'answer'
   const currentClue = typeof activeSlide === 'number' ? clues[activeSlide] : null
 
+  // Initialize dedicated confetti canvas instance for fullscreen support
+  useEffect(() => {
+    if (canvasRef.current) {
+      try {
+        confettiInstanceRef.current = confetti.create(canvasRef.current, {
+          resize: true,
+          useWorker: true,
+        })
+      } catch (err) {
+        console.warn('Canvas confetti initialization fallback:', err)
+      }
+    }
+  }, [])
+
   // Reset slide when active puzzle changes
   useEffect(() => {
     setActiveSlide(0)
     setShowHint(false)
-    didConfetti.current = false
     onResetTimer()
   }, [activePuzzleIndex, onResetTimer])
 
-  // Fire celebratory confetti when answer is revealed
+  // Fire celebratory confetti when answer is revealed (works in fullscreen & normal view)
   const triggerConfetti = useCallback(() => {
     const fire = (particleRatio, opts) => {
-      confetti({
-        ...opts,
-        particleCount: Math.floor(220 * particleRatio),
-        origin: { y: 0.6 },
-      })
+      const conf = confettiInstanceRef.current || confetti
+      try {
+        conf({
+          ...opts,
+          particleCount: Math.floor(220 * particleRatio),
+          origin: { y: 0.6 },
+          zIndex: 999999,
+        })
+      } catch (err) {
+        confetti({
+          ...opts,
+          particleCount: Math.floor(220 * particleRatio),
+          origin: { y: 0.6 },
+          zIndex: 999999,
+        })
+      }
     }
     fire(0.25, { spread: 26, startVelocity: 55, colors: ['#2563eb', '#f59e0b', '#ef4444'] })
     fire(0.2,  { spread: 60, colors: ['#22c55e', '#a855f7', '#ec4899'] })
@@ -146,11 +172,9 @@ export default function CineCluePlayView({
 
   const goToAnswerSlide = useCallback(() => {
     setActiveSlide('answer')
-    if (!didConfetti.current) {
-      didConfetti.current = true
-      triggerConfetti()
-    }
+    triggerConfetti()
   }, [triggerConfetti])
+
 
   // Slide navigation
   const nextSlide = useCallback(() => {
@@ -238,7 +262,14 @@ export default function CineCluePlayView({
           : 'relative w-full h-[78vh] min-h-[560px] rounded-3xl overflow-hidden shadow-2xl border border-slate-800'
       }`}
     >
+      {/* Confetti Canvas inside container to guarantee visibility in Fullscreen mode */}
+      <canvas
+        ref={canvasRef}
+        className="pointer-events-none absolute inset-0 z-50 w-full h-full"
+      />
+
       {/* ── Top Bar / Header ───────────────────────────────────── */}
+
       <div className="flex items-center justify-between px-4 sm:px-6 py-3 bg-slate-900/90 border-b border-slate-800/80 backdrop-blur-md shrink-0 gap-3 z-20">
         {/* Left: Back & Puzzle Info */}
         <div className="flex items-center gap-3 min-w-0">

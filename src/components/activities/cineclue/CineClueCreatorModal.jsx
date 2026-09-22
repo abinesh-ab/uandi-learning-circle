@@ -3,8 +3,9 @@ import { X, Plus, Trash2, Pencil, Upload, Loader2, ImageOff, ChevronUp, ChevronD
 import { compressAndUploadImage } from '../../../services/cineclueApi'
 
 const CATEGORIES = ['Movie', 'Song', 'Celebrity', 'Dialogue', 'Other']
-const BLANK_CLUE = { image_url: '', title: '', desc: '', timer_seconds: 45 }
+const BLANK_CLUE = { image_url: '', title: '', desc: '' }
 const BLANK_PUZZLE = {
+
   title: '',
   category: 'Movie',
   hint: '',
@@ -150,30 +151,17 @@ function ClueRow({ clue, index, total, onChange, onRemove, onMoveUp, onMoveDown 
         compact={false}
       />
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1">
-          <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">Clue Title</label>
-          <input
-            type="text"
-            value={clue.title}
-            onChange={(e) => onChange({ ...clue, title: e.target.value })}
-            placeholder="e.g. Scene from 2022"
-            className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-brand-blue bg-slate-50"
-          />
-        </div>
-        <div className="space-y-1">
-          <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">Timer (sec)</label>
-          <select
-            value={clue.timer_seconds}
-            onChange={(e) => onChange({ ...clue, timer_seconds: Number(e.target.value) })}
-            className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-brand-blue bg-slate-50"
-          >
-            {[15, 20, 30, 45, 60, 90].map((s) => (
-              <option key={s} value={s}>{s}s</option>
-            ))}
-          </select>
-        </div>
+      <div className="space-y-1">
+        <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">Clue Title</label>
+        <input
+          type="text"
+          value={clue.title}
+          onChange={(e) => onChange({ ...clue, title: e.target.value })}
+          placeholder="e.g. Scene from 2022"
+          className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-brand-blue bg-slate-50"
+        />
       </div>
+
 
       <div className="space-y-1">
         <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">Clue Description (optional)</label>
