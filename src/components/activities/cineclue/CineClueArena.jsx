@@ -1,8 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
-import { Clapperboard, Lock, Settings, Play, Loader2, ImageOff } from 'lucide-react'
+import { Clapperboard, Lock } from 'lucide-react'
 import { useCineClue } from '../../../hooks/useCineClue'
 import CineCluePlayView from './CineCluePlayView'
 import CineClueCreatorModal from './CineClueCreatorModal'
+import DeckLibraryView from './DeckLibraryView'
+import DeckDetailView from './DeckDetailView'
+import CreateDeckModal from './CreateDeckModal'
 
 // ── Passcode Gate Modal ───────────────────────────────────────────
 function PasscodeGate({ onUnlock }) {
@@ -72,120 +75,71 @@ function PasscodeGate({ onUnlock }) {
   )
 }
 
-// ── Lobby: Puzzle Selector ────────────────────────────────────────
-function CineClueLobby({
-  puzzles,
-  isLoading,
-  activePuzzleIndex,
-  onSelectPuzzle,
-  onPlay,
-  onOpenCreator,
-}) {
-  const CATEGORY_COLORS = {
-    Movie: 'bg-blue-100 text-blue-700 border-blue-200',
-    Song: 'bg-rose-100 text-rose-700 border-rose-200',
-    Celebrity: 'bg-amber-100 text-amber-700 border-amber-200',
-    Dialogue: 'bg-emerald-100 text-emerald-700 border-emerald-200',
-    Other: 'bg-slate-100 text-slate-600 border-slate-200',
-  }
-
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-black text-slate-900 font-heading">
-            🎬 Select a Puzzle
-          </h3>
-          <p className="text-xs text-slate-500 mt-0.5">Choose a puzzle, then launch Presenter Mode.</p>
-        </div>
-        <button
-          onClick={onOpenCreator}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors border border-slate-200"
-        >
-          <Settings className="w-3.5 h-3.5" /> Manage Puzzles
-        </button>
-      </div>
-
-      {isLoading ? (
-        <div className="flex items-center justify-center py-16">
-          <Loader2 className="w-6 h-6 animate-spin text-brand-blue" />
-        </div>
-      ) : puzzles.length === 0 ? (
-        <div className="text-center py-16 space-y-3">
-          <div className="text-5xl">🎬</div>
-          <p className="text-sm font-bold text-slate-600">No puzzles yet!</p>
-          <p className="text-xs text-slate-400">Use "Manage Puzzles" to create your first CineClue.</p>
-          <button
-            onClick={onOpenCreator}
-            className="px-5 py-2.5 rounded-2xl bg-brand-blue text-white text-xs font-black shadow-lg shadow-blue-500/25 hover:bg-blue-700 transition-all"
-          >
-            + Create First Puzzle
-          </button>
-        </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {puzzles.map((p, i) => (
-              <button
-                key={p.id}
-                onClick={() => onSelectPuzzle(i)}
-                className={`relative flex items-start gap-3 p-4 rounded-2xl border-2 text-left transition-all hover:shadow-md hover:-translate-y-0.5 ${
-                  activePuzzleIndex === i
-                    ? 'border-brand-blue bg-blue-50 shadow-md shadow-blue-100'
-                    : 'border-slate-200 bg-slate-50 hover:border-slate-300 hover:bg-white'
-                }`}
-              >
-                {/* Thumbnail */}
-                <div className="w-16 h-12 rounded-xl overflow-hidden shrink-0 bg-slate-200">
-                  {p.clues?.[0]?.image_url ? (
-                    <img src={p.clues[0].image_url} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-slate-200">
-                      <ImageOff className="w-4 h-4 text-slate-400" />
-                    </div>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-black text-slate-900 truncate">{p.title}</p>
-                  <div className="flex items-center gap-1.5 mt-1">
-                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${CATEGORY_COLORS[p.category] || CATEGORY_COLORS.Other}`}>
-                      {p.category}
-                    </span>
-                    <span className="text-[9px] text-slate-400">{p.clues?.length || 0} clues</span>
-                  </div>
-                </div>
-                {activePuzzleIndex === i && (
-                  <div className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-brand-blue" />
-                )}
-              </button>
-            ))}
-          </div>
-
-          {/* Launch Button */}
-          {puzzles.length > 0 && (
-            <div className="flex justify-center pt-2">
-              <button
-                onClick={onPlay}
-                className="flex items-center gap-2.5 px-8 py-4 rounded-2xl bg-gradient-to-r from-rose-500 to-amber-500 text-white font-black text-sm shadow-2xl shadow-rose-500/30 hover:from-rose-600 hover:to-amber-600 transition-all hover:scale-[1.02]"
-              >
-                <Play className="w-5 h-5" />
-                Launch Presenter Mode 🎬
-              </button>
-            </div>
-          )}
-        </>
-      )}
-    </div>
-  )
-}
-
 // ── CineClue Arena: Top-Level Container ──────────────────────────
 export default function CineClueArena() {
   const cc = useCineClue()
-  const [view, setView] = useState('lobby')  // 'lobby' | 'play'
-  const [creatorOpen, setCreatorOpen] = useState(false)
 
+  // View routing: 'library' | 'manage-deck' | 'play'
+  const [view, setView] = useState('library')
+
+  // Creator modal (for adding/editing a puzzle) — used from DeckDetailView
+  const [creatorOpen, setCreatorOpen] = useState(false)
+  const [editingPuzzle, setEditingPuzzle] = useState(null)
+
+  // Deck modal (create / edit a deck)
+  const [deckModalOpen, setDeckModalOpen] = useState(false)
+  const [editingDeck, setEditingDeck] = useState(null)
+  const [isSavingDeck, setIsSavingDeck] = useState(false)
+
+  // ── Deck actions (passcode already verified at unlock stage) ──
+  const handlePlayDeck = (deckId) => {
+    cc.selectDeck(deckId)
+    setView('play')
+  }
+
+  const handleManageDeck = (deckId) => {
+    cc.selectDeck(deckId)
+    setView('manage-deck')
+  }
+
+  const handleCreateDeck = () => {
+    setEditingDeck(null)
+    setDeckModalOpen(true)
+  }
+
+  const handleEditDeck = (deck) => {
+    setEditingDeck(deck)
+    setDeckModalOpen(true)
+  }
+
+  const handleSaveDeck = async (data) => {
+    setIsSavingDeck(true)
+    if (editingDeck) {
+      await cc.editDeck(editingDeck.id, data)
+    } else {
+      await cc.addDeck({ ...data, id: crypto.randomUUID() })
+    }
+    setIsSavingDeck(false)
+    setDeckModalOpen(false)
+    setEditingDeck(null)
+  }
+
+  const handleDeleteDeck = async (deckId) => {
+    await cc.removeDeck(deckId)
+  }
+
+  // ── Puzzle actions from DeckDetailView ────────────────────────
+  const handleAddPuzzle = () => {
+    setEditingPuzzle(null)
+    setCreatorOpen(true)
+  }
+
+  const handleEditPuzzle = (puzzle) => {
+    setEditingPuzzle(puzzle)
+    setCreatorOpen(true)
+  }
+
+  // ── Locked: show passcode gate ────────────────────────────────
   if (!cc.isUnlocked) {
     return (
       <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
@@ -201,16 +155,21 @@ export default function CineClueArena() {
     )
   }
 
+  // ── Play View (full-bleed presenter mode) ─────────────────────
   if (view === 'play') {
     return (
       <CineCluePlayView
         puzzle={cc.activePuzzle}
+        activeDeck={cc.activeDeck}
         activePuzzleIndex={cc.activePuzzleIndex}
         totalPuzzles={cc.puzzles.length}
-        onBack={() => setView('lobby')}
+        isDeckCompleted={cc.isDeckCompleted}
+        onBack={() => setView('library')}
+        onReturnToLibrary={() => { cc.replayDeck(); setView('library') }}
         onNextPuzzle={cc.nextPuzzle}
         onPrevPuzzle={cc.prevPuzzle}
         onGoToPuzzle={cc.goToPuzzle}
+        onReplayDeck={cc.replayDeck}
         // Timer
         timerDuration={cc.timerDuration}
         timerRemaining={cc.timerRemaining}
@@ -223,48 +182,94 @@ export default function CineClueArena() {
     )
   }
 
+  // ── Shared unlocked header ────────────────────────────────────
+  const renderHeader = (title = 'Connections: CineClue 🎬 🎵', subtitle = 'Connect the Clues • Crack the Title') => (
+    <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 px-6 py-4 flex items-center justify-between">
+      <div className="flex items-center gap-3">
+        <Clapperboard className="w-5 h-5 text-amber-400" />
+        <div>
+          <h3 className="text-sm font-black text-white font-heading">{title}</h3>
+          <p className="text-[10px] text-slate-400">{subtitle}</p>
+        </div>
+      </div>
+      <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[9px] font-black uppercase tracking-wider">
+        🟢 Host Unlocked
+      </span>
+    </div>
+  )
 
-  return (
-    <>
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-        {/* Game Header */}
-        <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Clapperboard className="w-5 h-5 text-amber-400" />
-            <div>
-              <h3 className="text-sm font-black text-white font-heading">Connections: CineClue 🎬 🎵</h3>
-              <p className="text-[10px] text-slate-400">Connect the Clues • Crack the Title</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[9px] font-black uppercase tracking-wider">
-              🟢 Host Unlocked
-            </span>
+  // ── Manage Deck (puzzle sequence editor) ──────────────────────
+  if (view === 'manage-deck') {
+    return (
+      <>
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+          {renderHeader()}
+          <div className="p-6">
+            <DeckDetailView
+              deck={cc.activeDeck}
+              puzzles={cc.puzzles}
+              isLoading={cc.isLoading}
+              onBackToLibrary={() => setView('library')}
+              onPlayDeck={handlePlayDeck}
+              onAddPuzzle={handleAddPuzzle}
+              onEditPuzzle={handleEditPuzzle}
+              onDeletePuzzle={cc.removePuzzle}
+              onReorderPuzzles={cc.reorderPuzzles}
+              onEditDeck={handleEditDeck}
+            />
           </div>
         </div>
 
-        {/* Lobby */}
+        {/* Puzzle creator modal (add or edit) */}
+        <CineClueCreatorModal
+          isOpen={creatorOpen}
+          onClose={() => { setCreatorOpen(false); setEditingPuzzle(null) }}
+          puzzles={cc.puzzles}
+          isLoading={cc.isLoading}
+          onAdd={cc.addPuzzle}
+          onEdit={cc.editPuzzle}
+          onDelete={cc.removePuzzle}
+          deckId={cc.activeDeckId}
+          editingPuzzle={editingPuzzle}
+        />
+
+        {/* Deck edit modal */}
+        <CreateDeckModal
+          isOpen={deckModalOpen}
+          onClose={() => { setDeckModalOpen(false); setEditingDeck(null) }}
+          onSave={handleSaveDeck}
+          editingDeck={editingDeck}
+          isSaving={isSavingDeck}
+        />
+      </>
+    )
+  }
+
+  // ── Default: Deck Library ─────────────────────────────────────
+  return (
+    <>
+      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+        {renderHeader()}
         <div className="p-6">
-          <CineClueLobby
-            puzzles={cc.puzzles}
-            isLoading={cc.isLoading}
-            activePuzzleIndex={cc.activePuzzleIndex}
-            onSelectPuzzle={cc.goToPuzzle}
-            onPlay={() => setView('play')}
-            onOpenCreator={() => setCreatorOpen(true)}
+          <DeckLibraryView
+            decks={cc.decks}
+            isLoading={cc.isDecksLoading}
+            onPlayDeck={handlePlayDeck}
+            onManageDeck={handleManageDeck}
+            onCreateDeck={handleCreateDeck}
+            onEditDeck={handleEditDeck}
+            onDeleteDeck={handleDeleteDeck}
           />
         </div>
       </div>
 
-      {/* Creator Modal */}
-      <CineClueCreatorModal
-        isOpen={creatorOpen}
-        onClose={() => setCreatorOpen(false)}
-        puzzles={cc.puzzles}
-        isLoading={cc.isLoading}
-        onAdd={cc.addPuzzle}
-        onEdit={cc.editPuzzle}
-        onDelete={cc.removePuzzle}
+      {/* Deck create/edit modal */}
+      <CreateDeckModal
+        isOpen={deckModalOpen}
+        onClose={() => { setDeckModalOpen(false); setEditingDeck(null) }}
+        onSave={handleSaveDeck}
+        editingDeck={editingDeck}
+        isSaving={isSavingDeck}
       />
     </>
   )

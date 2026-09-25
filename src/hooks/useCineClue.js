@@ -1,32 +1,41 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import {
+  fetchCineclueDecks,
+  createCineclueDeck,
+  updateCineclueDeck,
+  deleteCineclueDeck,
   fetchCinecluePuzzles,
   createCinecluePuzzle,
   updateCinecluePuzzle,
   deleteCinecluePuzzle,
+  reorderCinecluePuzzles,
+  DEFAULT_DECK_ID,
 } from '../services/cineclueApi'
 
 const SESSION_KEY = 'cineclue_unlocked'
 const PASSCODE = 'xfactors'
 
-// ── Main CineClue hook ───────────────────────────────────────────
 export function useCineClue() {
   // Access control
   const [isUnlocked, setIsUnlocked] = useState(
     () => sessionStorage.getItem(SESSION_KEY) === '1'
   )
 
-  // Puzzles list
+  // Decks state
+  const [decks, setDecks] = useState([])
+  const [isDecksLoading, setIsDecksLoading] = useState(false)
+  const [activeDeckId, setActiveDeckId] = useState(null)
+
+  // Puzzles state (scoped to active deck)
   const [puzzles, setPuzzles] = useState([])
   const [isLoading, setIsLoading] = useState(false)
 
-  // Active puzzle index
+  // Presenter navigation & stage state
   const [activePuzzleIndex, setActivePuzzleIndex] = useState(0)
-
-  // Presenter / play state
   const [revealedCount, setRevealedCount] = useState(1)
   const [showHint, setShowHint] = useState(false)
   const [showAnswer, setShowAnswer] = useState(false)
+  const [isDeckCompleted, setIsDeckCompleted] = useState(false)
 
   // Timer state
   const [timerDuration, setTimerDuration] = useState(45)
@@ -34,17 +43,51 @@ export function useCineClue() {
   const [timerRunning, setTimerRunning] = useState(false)
   const timerRef = useRef(null)
 
-  // Load puzzles when unlocked
-  useEffect(() => {
-    if (!isUnlocked) return
-    setIsLoading(true)
-    fetchCinecluePuzzles().then((rows) => {
-      setPuzzles(rows)
-      setIsLoading(false)
-    })
-  }, [isUnlocked])
+  // ── Load Decks ───────────────────────────────────────────────────
+  const loadDecks = useCallback(async () => {
+    setIsDecksLoading(true)
+    try {
+      const rows = await fetchCineclueDecks()
+      setDecks(rows)
+      return rows
+    } finally {
+      setIsDecksLoading(false)
+    }
+  }, [])
 
-  // Timer engine
+  useEffect(() => {
+    loadDecks()
+  }, [loadDecks])
+
+  // ── Load Puzzles for Active Deck ─────────────────────────────────
+  const loadPuzzles = useCallback(async (deckId) => {
+    setIsLoading(true)
+    try {
+      const rows = await fetchCinecluePuzzles(deckId)
+      setPuzzles(rows)
+      return rows
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadPuzzles(activeDeckId)
+  }, [activeDeckId, loadPuzzles])
+
+  // Active Deck object
+  const activeDeck = useMemo(() => {
+    if (!activeDeckId) return null
+    return decks.find((d) => d.id === activeDeckId) || null
+  }, [decks, activeDeckId])
+
+  // Active Puzzle object
+  const activePuzzle = useMemo(() => {
+    if (puzzles.length === 0) return null
+    return puzzles[activePuzzleIndex] || null
+  }, [puzzles, activePuzzleIndex])
+
+  // ── Timer Engine ─────────────────────────────────────────────────
   useEffect(() => {
     if (timerRunning) {
       timerRef.current = setInterval(() => {
@@ -63,7 +106,7 @@ export function useCineClue() {
     return () => clearInterval(timerRef.current)
   }, [timerRunning])
 
-  // ── Passcode verify ──
+  // ── Access Control (Secret Passcode: xfactors) ───────────────────
   const unlock = useCallback((inputPasscode) => {
     if (inputPasscode === PASSCODE) {
       sessionStorage.setItem(SESSION_KEY, '1')
@@ -78,29 +121,55 @@ export function useCineClue() {
     setIsUnlocked(false)
   }, [])
 
-  // ── Puzzle navigation ──
-  const activePuzzle = puzzles[activePuzzleIndex] || null
+  // ── Deck Selection & Presenter Reset ─────────────────────────────
+  const selectDeck = useCallback((deckId) => {
+    setActiveDeckId(deckId)
+    setActivePuzzleIndex(0)
+    setRevealedCount(1)
+    setShowHint(false)
+    setShowAnswer(false)
+    setIsDeckCompleted(false)
+    setTimerRemaining(45)
+    setTimerRunning(false)
+  }, [])
 
+  // ── Puzzle Navigation ────────────────────────────────────────────
   const goToPuzzle = useCallback((index) => {
     setActivePuzzleIndex(index)
     setRevealedCount(1)
     setShowHint(false)
     setShowAnswer(false)
-    setTimerRemaining(45)
+    setIsDeckCompleted(false)
+    setTimerRemaining(timerDuration)
     setTimerRunning(false)
-  }, [])
+  }, [timerDuration])
 
   const nextPuzzle = useCallback(() => {
     if (puzzles.length === 0) return
-    goToPuzzle((activePuzzleIndex + 1) % puzzles.length)
+    if (activePuzzleIndex < puzzles.length - 1) {
+      goToPuzzle(activePuzzleIndex + 1)
+    } else {
+      // Finished all puzzles in this deck!
+      setIsDeckCompleted(true)
+    }
   }, [activePuzzleIndex, puzzles.length, goToPuzzle])
 
   const prevPuzzle = useCallback(() => {
     if (puzzles.length === 0) return
-    goToPuzzle((activePuzzleIndex - 1 + puzzles.length) % puzzles.length)
-  }, [activePuzzleIndex, puzzles.length, goToPuzzle])
+    if (isDeckCompleted) {
+      setIsDeckCompleted(false)
+      goToPuzzle(puzzles.length - 1)
+      return
+    }
+    const prevIdx = Math.max(0, activePuzzleIndex - 1)
+    goToPuzzle(prevIdx)
+  }, [activePuzzleIndex, puzzles.length, isDeckCompleted, goToPuzzle])
 
-  // ── Clue reveal controls ──
+  const replayDeck = useCallback(() => {
+    goToPuzzle(0)
+  }, [goToPuzzle])
+
+  // ── Clue Reveal Controls ─────────────────────────────────────────
   const revealNextClue = useCallback(() => {
     if (!activePuzzle) return
     setRevealedCount((prev) => Math.min(prev + 1, activePuzzle.clues.length))
@@ -112,12 +181,10 @@ export function useCineClue() {
   }, [activePuzzle])
 
   const toggleHint = useCallback(() => setShowHint((p) => !p), [])
-
   const revealAnswer = useCallback(() => setShowAnswer(true), [])
-
   const hideAnswer = useCallback(() => setShowAnswer(false), [])
 
-  // ── Timer controls ──
+  // ── Timer Controls ───────────────────────────────────────────────
   const startTimer = useCallback(() => setTimerRunning(true), [])
   const pauseTimer = useCallback(() => setTimerRunning(false), [])
   const resetTimer = useCallback((duration) => {
@@ -133,40 +200,92 @@ export function useCineClue() {
     setTimerRunning(false)
   }, [])
 
-  // ── CRUD actions ──
-  const addPuzzle = useCallback(async (puzzle) => {
-    const res = await createCinecluePuzzle(puzzle)
+  // ── Deck CRUD Actions ────────────────────────────────────────────
+  const addDeck = useCallback(async (deckData) => {
+    const res = await createCineclueDeck(deckData)
     if (res.success) {
-      setPuzzles((prev) => [...prev, res.row])
+      await loadDecks()
     }
     return res
-  }, [])
+  }, [loadDecks])
+
+  const editDeck = useCallback(async (id, updates) => {
+    const res = await updateCineclueDeck(id, updates)
+    if (res.success) {
+      await loadDecks()
+    }
+    return res
+  }, [loadDecks])
+
+  const removeDeck = useCallback(async (id) => {
+    const res = await deleteCineclueDeck(id)
+    if (res.success) {
+      if (activeDeckId === id) {
+        setActiveDeckId(DEFAULT_DECK_ID)
+      }
+      await loadDecks()
+      await loadPuzzles(activeDeckId === id ? DEFAULT_DECK_ID : activeDeckId)
+    }
+    return res
+  }, [activeDeckId, loadDecks, loadPuzzles])
+
+  // ── Puzzle CRUD Actions ──────────────────────────────────────────
+  const addPuzzle = useCallback(async (puzzleData) => {
+    const payload = {
+      ...puzzleData,
+      deck_id: puzzleData.deck_id || activeDeckId || DEFAULT_DECK_ID,
+    }
+    const res = await createCinecluePuzzle(payload)
+    if (res.success) {
+      await loadPuzzles(activeDeckId)
+      await loadDecks()
+    }
+    return res
+  }, [activeDeckId, loadPuzzles, loadDecks])
 
   const editPuzzle = useCallback(async (id, updates) => {
     const res = await updateCinecluePuzzle(id, updates)
     if (res.success) {
-      setPuzzles((prev) => prev.map((p) => (p.id === id ? { ...p, ...updates } : p)))
+      await loadPuzzles(activeDeckId)
+      await loadDecks()
     }
     return res
-  }, [])
+  }, [activeDeckId, loadPuzzles, loadDecks])
 
   const removePuzzle = useCallback(async (id) => {
     const res = await deleteCinecluePuzzle(id)
     if (res.success) {
-      setPuzzles((prev) => {
-        const next = prev.filter((p) => p.id !== id)
-        setActivePuzzleIndex((i) => Math.min(i, Math.max(0, next.length - 1)))
-        return next
-      })
+      await loadPuzzles(activeDeckId)
+      await loadDecks()
+      setActivePuzzleIndex((i) => Math.max(0, i - 1))
     }
     return res
-  }, [])
+  }, [activeDeckId, loadPuzzles, loadDecks])
+
+  const reorderPuzzles = useCallback(async (orderedIds) => {
+    const res = await reorderCinecluePuzzles(activeDeckId, orderedIds)
+    if (res.success) {
+      await loadPuzzles(activeDeckId)
+    }
+    return res
+  }, [activeDeckId, loadPuzzles])
 
   return {
-    // Access
+    // Access Control
     isUnlocked,
     unlock,
     lock,
+
+    // Decks
+    decks,
+    isDecksLoading,
+    activeDeckId,
+    activeDeck,
+    selectDeck,
+    loadDecks,
+    addDeck,
+    editDeck,
+    removeDeck,
 
     // Puzzles
     puzzles,
@@ -176,11 +295,15 @@ export function useCineClue() {
     goToPuzzle,
     nextPuzzle,
     prevPuzzle,
+    replayDeck,
+    isDeckCompleted,
     addPuzzle,
     editPuzzle,
     removePuzzle,
+    reorderPuzzles,
+    loadPuzzles,
 
-    // Presenter state
+    // Presenter Stage
     revealedCount,
     showHint,
     showAnswer,

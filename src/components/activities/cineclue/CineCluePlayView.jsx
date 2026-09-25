@@ -91,15 +91,82 @@ function TimerPill({ remaining, duration, running, onStart, onPause, onReset, on
 }
 
 
+
+// ── Deck Completed Celebration Screen ────────────────────────────
+function DeckCompletedScreen({ activeDeck, totalPuzzles, onReplayDeck, onReturnToLibrary, triggerConfetti }) {
+  // Fire confetti burst on mount
+  useEffect(() => {
+    triggerConfetti?.()
+  }, [triggerConfetti])
+
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center p-8 text-center gap-6 relative z-10">
+      {/* Grand badge */}
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-24 h-24 rounded-[2rem] bg-gradient-to-br from-amber-400 via-rose-500 to-amber-500 flex items-center justify-center shadow-2xl shadow-amber-500/40 animate-bounce text-5xl">
+          🎉
+        </div>
+        <div>
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500 to-rose-500 text-white text-xs font-black uppercase tracking-widest shadow-lg shadow-amber-500/25 mb-3">
+            <Trophy className="w-4 h-4" /> Deck Completed!
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-white to-rose-300 font-heading leading-tight">
+            All Puzzles Solved!
+          </h1>
+        </div>
+      </div>
+
+      {/* Summary card */}
+      <div className="bg-slate-800/80 backdrop-blur-md border border-slate-700 rounded-3xl p-6 max-w-sm w-full shadow-xl">
+        <div className="text-3xl mb-2">{activeDeck?.cover_emoji || '🎬'}</div>
+        <h2 className="text-base font-black text-white font-heading mb-1">
+          {activeDeck?.title || 'CineClue Deck'}
+        </h2>
+        <p className="text-xs text-slate-400 mb-4">{activeDeck?.description || 'Connection puzzles session'}</p>
+        <div className="flex items-center justify-center gap-3 text-[11px] font-bold">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+            ✅ {totalPuzzles} Puzzle{totalPuzzles !== 1 ? 's' : ''} Solved
+          </span>
+          {activeDeck?.target_audience && (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-500/20 text-blue-400 border border-blue-500/30">
+              👥 {activeDeck.target_audience}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
+        <button
+          onClick={onReplayDeck}
+          className="flex items-center gap-2 px-7 py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm border border-slate-700 transition-all hover:scale-105"
+        >
+          🔄 Replay Deck
+        </button>
+        <button
+          onClick={onReturnToLibrary}
+          className="flex items-center gap-2 px-7 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 text-white font-black text-sm shadow-xl shadow-amber-500/30 transition-all hover:scale-105"
+        >
+          📚 Return to Library
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ── Main Presenter Play View (One Clue Slide at a Time) ──────────
 export default function CineCluePlayView({
   puzzle,
+  activeDeck,
   activePuzzleIndex,
   totalPuzzles,
+  isDeckCompleted = false,
   onBack,
+  onReturnToLibrary,
   onNextPuzzle,
   onPrevPuzzle,
   onGoToPuzzle,
+  onReplayDeck,
   // Timer
   timerDuration,
   timerRemaining,
@@ -236,6 +303,30 @@ export default function CineCluePlayView({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [nextSlide, prevSlide, toggleFullscreen, isFullscreen])
 
+  // ── "Deck Completed!" celebration screen ──────────────────────
+  if (isDeckCompleted) {
+    return (
+      <div
+        ref={containerRef}
+        className={`flex flex-col bg-slate-950 text-white select-none ${
+          isFullscreen
+            ? 'fixed inset-0 z-[9999] w-screen h-screen'
+            : 'relative w-full h-[78vh] min-h-[560px] rounded-3xl overflow-hidden shadow-2xl border border-slate-800'
+        }`}
+      >
+        <canvas ref={canvasRef} className="pointer-events-none absolute inset-0 z-50 w-full h-full" />
+
+        <DeckCompletedScreen
+          activeDeck={activeDeck}
+          totalPuzzles={totalPuzzles}
+          onReplayDeck={onReplayDeck}
+          onReturnToLibrary={onReturnToLibrary}
+          triggerConfetti={triggerConfetti}
+        />
+      </div>
+    )
+  }
+
   if (!puzzle) {
     return (
       <div className="flex flex-col items-center justify-center h-full min-h-[500px] bg-slate-950 text-white gap-4">
@@ -245,7 +336,7 @@ export default function CineCluePlayView({
           onClick={onBack}
           className="px-6 py-2.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold transition-colors"
         >
-          ← Back to Lobby
+          ← Back to Library
         </button>
       </div>
     )
@@ -254,6 +345,7 @@ export default function CineCluePlayView({
   const catStyle = CATEGORY_STYLES[puzzle.category] || CATEGORY_STYLES.Other
 
   return (
+
     <div
       ref={containerRef}
       className={`flex flex-col bg-slate-950 text-white select-none transition-all ${
@@ -271,19 +363,36 @@ export default function CineCluePlayView({
       {/* ── Top Bar / Header ───────────────────────────────────── */}
 
       <div className="flex items-center justify-between px-4 sm:px-6 py-3 bg-slate-900/90 border-b border-slate-800/80 backdrop-blur-md shrink-0 gap-3 z-20">
-        {/* Left: Back & Puzzle Info */}
+        {/* Left: Back & Deck / Puzzle Info */}
         <div className="flex items-center gap-3 min-w-0">
           <button
             onClick={onBack}
             className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-bold transition-colors shrink-0"
           >
-            <ChevronLeft className="w-4 h-4" /> Lobby
+            <ChevronLeft className="w-4 h-4" /> Library
           </button>
           <div className="flex items-center gap-2 min-w-0 truncate">
-            <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border ${catStyle}`}>
-              {puzzle.category}
-            </span>
-            <h2 className="text-sm font-black text-white truncate font-heading">{puzzle.title}</h2>
+            {activeDeck && (
+              <span className="text-base shrink-0">{activeDeck.cover_emoji || '🎬'}</span>
+            )}
+            {activeDeck ? (
+              <div className="flex items-center gap-1.5 min-w-0 truncate">
+                <h2 className="text-xs font-black text-white truncate font-heading">
+                  {activeDeck.title}
+                </h2>
+                <span className="text-slate-500 shrink-0">•</span>
+                <span className="text-[10px] font-bold text-slate-400 whitespace-nowrap">
+                  Puzzle {activePuzzleIndex + 1} of {totalPuzzles}
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 min-w-0 truncate">
+                <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border ${CATEGORY_STYLES[puzzle?.category] || CATEGORY_STYLES.Other}`}>
+                  {puzzle?.category}
+                </span>
+                <h2 className="text-sm font-black text-white truncate font-heading">{puzzle?.title}</h2>
+              </div>
+            )}
           </div>
         </div>
 

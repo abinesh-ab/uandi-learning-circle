@@ -364,34 +364,70 @@ function PuzzleForm({ initial, onSave, onCancel, isSaving, saveError }) {
 export default function CineClueCreatorModal({
   isOpen,
   onClose,
-  puzzles,
-  isLoading,
+  puzzles = [],
+  isLoading = false,
   onAdd,
   onEdit,
   onDelete,
+  deckId = null,
+  editingPuzzle: externalEditingPuzzle = null,
 }) {
-  const [view, setView] = useState('list') // 'list' | 'create' | 'edit'
-  const [editingPuzzle, setEditingPuzzle] = useState(null)
+  const [view, setView] = useState(() => (externalEditingPuzzle ? 'edit' : deckId ? 'create' : 'list'))
+  const [editingPuzzle, setEditingPuzzle] = useState(externalEditingPuzzle)
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
   const [deleteConfirm, setDeleteConfirm] = useState(null)
+
+  // Sync when opened or props change
+  useEffect(() => {
+    if (!isOpen) return
+    if (externalEditingPuzzle) {
+      setEditingPuzzle(externalEditingPuzzle)
+      setView('edit')
+    } else if (deckId) {
+      setEditingPuzzle(null)
+      setView('create')
+    } else {
+      setEditingPuzzle(null)
+      setView('list')
+    }
+    setSaveError('')
+  }, [isOpen, externalEditingPuzzle, deckId])
+
+  // Escape key close
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && isOpen) onClose()
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, onClose])
 
   if (!isOpen) return null
 
   const handleSave = async (formData) => {
     setIsSaving(true)
     setSaveError('')
+    const payload = {
+      ...formData,
+      deck_id: deckId || formData.deck_id,
+    }
+
     let res
     if (view === 'edit' && editingPuzzle) {
-      res = await onEdit(editingPuzzle.id, formData)
+      res = await onEdit(editingPuzzle.id, payload)
     } else {
-      res = await onAdd(formData)
+      res = await onAdd(payload)
     }
     setIsSaving(false)
     if (res?.success !== false) {
-      setView('list')
       setEditingPuzzle(null)
       setSaveError('')
+      if (deckId || externalEditingPuzzle) {
+        onClose()
+      } else {
+        setView('list')
+      }
     } else {
       setSaveError(res?.error || 'Failed to save puzzle. Please check all fields.')
     }
@@ -413,6 +449,7 @@ export default function CineClueCreatorModal({
     Song: 'bg-rose-100 text-rose-700',
     Celebrity: 'bg-amber-100 text-amber-700',
     Dialogue: 'bg-emerald-100 text-emerald-700',
+
     Other: 'bg-slate-100 text-slate-600',
   }
 
