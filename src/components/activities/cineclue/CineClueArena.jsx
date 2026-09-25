@@ -91,6 +91,11 @@ export default function CineClueArena() {
   const [editingDeck, setEditingDeck] = useState(null)
   const [isSavingDeck, setIsSavingDeck] = useState(false)
 
+  // Cache the deck object directly when entering manage-deck view so
+  // DeckDetailView always gets a non-null deck on the very first render
+  // (cc.activeDeck may be null until the hook's internal useMemo settles)
+  const [managingDeck, setManagingDeck] = useState(null)
+
   // ── Deck actions (passcode already verified at unlock stage) ──
   const handlePlayDeck = (deckId) => {
     cc.selectDeck(deckId)
@@ -98,6 +103,10 @@ export default function CineClueArena() {
   }
 
   const handleManageDeck = (deckId) => {
+    // Find the deck object immediately from current cc.decks state so
+    // DeckDetailView has it synchronously on first render
+    const deck = cc.decks.find((d) => d.id === deckId) || null
+    setManagingDeck(deck)
     cc.selectDeck(deckId)
     setView('manage-deck')
   }
@@ -114,8 +123,16 @@ export default function CineClueArena() {
 
   const handleSaveDeck = async (data) => {
     setIsSavingDeck(true)
+    let savedDeck = null
     if (editingDeck) {
-      await cc.editDeck(editingDeck.id, data)
+      const res = await cc.editDeck(editingDeck.id, data)
+      if (res?.success) {
+        savedDeck = { ...editingDeck, ...data }
+        // Keep managingDeck in sync if we just edited the deck we're managing
+        if (managingDeck && managingDeck.id === editingDeck.id) {
+          setManagingDeck(savedDeck)
+        }
+      }
     } else {
       await cc.addDeck({ ...data, id: crypto.randomUUID() })
     }
@@ -126,6 +143,11 @@ export default function CineClueArena() {
 
   const handleDeleteDeck = async (deckId) => {
     await cc.removeDeck(deckId)
+    // If we deleted the deck we're managing, go back to library
+    if (managingDeck && managingDeck.id === deckId) {
+      setManagingDeck(null)
+      setView('library')
+    }
   }
 
   // ── Puzzle actions from DeckDetailView ────────────────────────
@@ -200,23 +222,37 @@ export default function CineClueArena() {
 
   // ── Manage Deck (puzzle sequence editor) ──────────────────────
   if (view === 'manage-deck') {
+    // Use managingDeck (set synchronously) with a fallback to cc.activeDeck
+    // after the hook's useMemo has caught up
+    const deckForView = managingDeck || cc.activeDeck
+
     return (
       <>
         <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
           {renderHeader()}
           <div className="p-6">
-            <DeckDetailView
-              deck={cc.activeDeck}
-              puzzles={cc.puzzles}
-              isLoading={cc.isLoading}
-              onBackToLibrary={() => setView('library')}
-              onPlayDeck={handlePlayDeck}
-              onAddPuzzle={handleAddPuzzle}
-              onEditPuzzle={handleEditPuzzle}
-              onDeletePuzzle={cc.removePuzzle}
-              onReorderPuzzles={cc.reorderPuzzles}
-              onEditDeck={handleEditDeck}
-            />
+            {!deckForView ? (
+              // Safety fallback: deck not resolved yet — show spinner
+              <div className="flex items-center justify-center py-20">
+                <div className="flex flex-col items-center gap-3">
+                  <div className="w-8 h-8 border-4 border-brand-blue border-t-transparent rounded-full animate-spin" />
+                  <p className="text-xs text-slate-400 font-bold">Loading deck...</p>
+                </div>
+              </div>
+            ) : (
+              <DeckDetailView
+                deck={deckForView}
+                puzzles={cc.puzzles}
+                isLoading={cc.isLoading}
+                onBackToLibrary={() => { setManagingDeck(null); setView('library') }}
+                onPlayDeck={handlePlayDeck}
+                onAddPuzzle={handleAddPuzzle}
+                onEditPuzzle={handleEditPuzzle}
+                onDeletePuzzle={cc.removePuzzle}
+                onReorderPuzzles={cc.reorderPuzzles}
+                onEditDeck={handleEditDeck}
+              />
+            )}
           </div>
         </div>
 
